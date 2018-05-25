@@ -1,0 +1,33 @@
+{
+    "name": "phptek/verifiable",
+    "type": "silverstripe-vendormodule",
+    "license": "BSD-3-Clause",
+    "description": "Cryptographically verify data hasn't changed, by reference to a Blockchain or other Merkle Tree storage.",
+    "keywords": ["silverstripe", "verify", "verifiable", "blockchain", "merkle"],
+    "authors": [
+        {
+            "name": "Russell Michell",
+            "homepage": "http://theruss.com/"
+        },
+        {
+            "name": "Elliot Sawyer"
+        }
+    ],
+    "require": {
+        "php": ">=7.0",
+        "silverstripe/framework": "4.1.0"
+    },
+    "require-dev": {
+        "phpunit/PHPUnit": "^5.7"
+    },
+    "config": {
+        "process-timeout": 900
+    },
+    "extra": {
+        "installer-name": "verifiable"
+    },
+    "suggest": {
+        "phptek/jsontext": "Optionally store chainpoint proofs in a dedicated JSON store"
+    },
+    "minimum-stability": "dev"
+}
