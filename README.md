@@ -62,3 +62,7 @@ Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's
 * Developers can configure the module to hash only a subset of model-fields
 * Bitcoin and Ethereum integration via the Tierion Network
 * Trillian integration
+
+## TODO
+
+* What to do abput `Versioned::onAfterRollback()` - disallow roliwng-back to previous version if it's verifiable (That is: It has populated "Proof" field)?

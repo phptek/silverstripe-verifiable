@@ -20,6 +20,7 @@ use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
  *
  * @todo Store the hash function used and if subsequent verifications
  *       fail because differing hash functions are used, throw an exception.
+ * @todo Hard-code "Created" and "LastEdited" fields into "verifiable_fields"
  */
 class VerifiableExtension extends DataExtension
 {
@@ -74,8 +75,8 @@ class VerifiableExtension extends DataExtension
         $doWrite = count($verifiable) && (count($verifiableFields) !== $skipWriteCount);
 
         if ($doWrite && $proofData = $this->verifiableService->write($verifiable)) {
-            // Save tentative response
-            $this->getOwner()->setField('Proof', $proofData)->write();
+            // Save initial response
+            $this->writeProof($proofData);
             // Fire off a job to periodically check if verification is complete
             // TODO: Use AsyncPHP and use a callback OR check if API has a callback endpoint it can call on our end (Tierion does)
             $this->verifiableService->queueVerification($this->getOwner());
@@ -137,6 +138,18 @@ class VerifiableExtension extends DataExtension
 
         // 3). Verification complete
         return true;
+    }
+
+    /**
+     * Writes string data that is assumed to be JSON (as returned from a web-service
+     * for example) and saved to this decorated object's "Proof" field.
+     *
+     * @param  string $proof
+     * @return void
+     */
+    public function writeProof(string $proof)
+    {
+        $this->getOwner()->setField('Proof', $proof)->write();
     }
 
 }

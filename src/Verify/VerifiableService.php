@@ -58,7 +58,7 @@ class VerifiableService
      */
     public function write(array $data)
     {
-        return $this->backend->writeHash([$this->hash($data)]);
+        return $this->backend->hashes([$this->hash($data)]);
     }
 
     /**
@@ -80,7 +80,7 @@ class VerifiableService
      */
     public function verify(string $proof) : bool
     {
-        return $this->backend->verifyProof($proof);
+        return $this->backend->verify($proof);
     }
 
     /**

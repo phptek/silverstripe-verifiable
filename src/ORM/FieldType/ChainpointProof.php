@@ -24,11 +24,11 @@ class ChainpointProof extends JSONText
      *
      * @return string
      */
-    protected function getHashIdNode() : string
+    public function getHashIdNode() : string
     {
-        $this->setReturnType('json');
+        $this->setReturnType('array');
 
-        return $this->query('->>', 'hash_id_node');
+        return $this->query('->>', 'hash_id_node')['hash_id_node'];
     }
 
     /**

@@ -14,12 +14,10 @@ use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Exception\VerifiableValidationException;
 use SilverStripe\Core\Injector\Injector;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Handler\CurlHandler;
 
 /**
  * Calls the endpoints of the chainpoint.org (Tierion?) network. Based on the Swagger
- * docs found here: https://app.swaggerhub.com/apis/chainpoint/node/1.0.0.
+ * docs found here: https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
  *
  * @see https://chainpoint.org
  * @see https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
@@ -100,7 +98,7 @@ class Chainpoint implements BackendProvider
      *
      * @param  string $proof A valid JSON-LD Chainpoint Proof.
      * @return bool
-     * @todo Rename to verify() as per the "gateway" we're calling
+     * @todo See the returned proof's "uris" key, to be able to call a specific URI for proof verification.
      */
     public function verifyProof(string $proof) : bool
     {
@@ -111,6 +109,10 @@ class Chainpoint implements BackendProvider
         }
 
         $response = $this->client('/verify', 'POST', ['proofs' => [$proof]]);
+
+        if ($response === '[]') {
+            return false;
+        }
 
         return json_decode($response->getBody(), true)['status'] === 'verified';
     }

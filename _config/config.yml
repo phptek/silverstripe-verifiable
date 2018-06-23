@@ -5,6 +5,10 @@ Name: verifiable-config
 PhpTek\Verifiable\Verify\VerifiableExtension:
   dependencies:
     verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
+    
+PhpTek\Verifiable\Controller\VerificationController:
+  dependencies:
+    verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
 
 PhpTek\Verifiable\Verify\VerifiableService:
   # One of: "trillian" or "chainpoint"

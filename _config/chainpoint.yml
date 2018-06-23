@@ -10,3 +10,5 @@ PhpTek\Verifiable\Backend\Chainpoint:
     - https://a.chainpoint.org/nodes/random/
     - https://b.chainpoint.org/nodes/random/
     - https://c.chainpoint.org/nodes/random/
+  # Verify directly via local Bitcoind & Geth nodes?
+  direct_verification: false

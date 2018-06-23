@@ -1,0 +1,10 @@
+---
+Name: verifiable-routes
+After:
+  - '#rootroutes'
+  - '#coreroutes'
+---
+
+SilverStripe\Control\Director:
+  rules:
+    verify: 'PhpTek\Verifiable\Controller\VerificationController'
