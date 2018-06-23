@@ -8,7 +8,7 @@
 namespace PhpTek\Verifiable\Verify;
 
 use SilverStripe\Core\DataExtension;
-use PhpTek\JSONText\JSONText;
+use PhpTek\Verifiable\Verify\ChainpointProof;
 
 /**
  * By attaching to any {@link DataObject} subclass, including {@link SiteTree}
@@ -31,7 +31,7 @@ class VerifiableExtension extends DataExtension
      * @config
      */
     private static $db = [
-        'Proofs' => JSONText::class,
+        'Proof' => ChainpointProof::class,
     ];
 
     /**
@@ -56,6 +56,21 @@ class VerifiableExtension extends DataExtension
     {
         parent::onAfterWrite();
 
+        $verifiable = $this->normaliseData();
+
+        if (count($verifiable)) {
+            $this->verifiableService->write($verifiable);
+            $this->verifiableService->queuePing($this->getOwner());
+        }
+    }
+
+    /**
+     * Normalise this model's data such that it is best suited to being hashed.
+     *
+     * @return array
+     */
+    public function normaliseData() : string
+    {
         $fields = $this->getOwner()->config()->get('verifiable_fields');
         $verifiable = [];
 
@@ -63,10 +78,9 @@ class VerifiableExtension extends DataExtension
             $verifiable[] = (string) $this->getOwner()->getField($field);
         }
 
-        if (count($verifiable)) {
-            $this->verifiableService->write($verifiable);
-        }
+        return $verifiable;
     }
+
 
     /**
      * Central to the whole package, this method is passed an array of fields
@@ -86,14 +100,15 @@ class VerifiableExtension extends DataExtension
     public function verify(array $data, bool $strict = true) : bool
     {
         $hash = $this->verifiableService->hash($data);
+        $proof = $this->getOwner()->dbObject('Proof');
 
         // 1). Get the locally stored chainpoint proof
-        if (!$localProof = $this->getOwner()->getField('Proof')->find('>>hash', $hash)) {
+        if (!$proof->match($hash)) {
             return false;
         }
 
         // 2). Send the local proof to the backend for verification
-        if (!$this->verificationService->verify($localProof)) {
+        if (!$this->verificationService->verify($proof)) {
             return false;
         }
 

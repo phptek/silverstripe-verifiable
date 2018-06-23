@@ -12,10 +12,16 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\ClassInfo;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
+use PhpTek\Verifiable\Exception\VerifiableServiceException;
+use PhpTek\Verifiable\Job\BackendVerificationJob;
+
+if (!class_exists(Symbiote\QueuedJobs\Services\QueuedJobService)) {
+    throw new VerifiableServiceException('QueuedJobs module is not installed.');
+}
 
 /**
  * Service class that works as an intermediary between any data model and the
- * currently selected Merkel Tree storage backend.
+ * currently selected Merkle Tree storage backend.
  */
 class VerifiableService
 {
@@ -130,6 +136,20 @@ class VerifiableService
         $text = implode('', $data);
 
         return $func($text);
+    }
+
+    /**
+     * Setup a {@link QueuedJob} to ping a backend and update the passed dataobject's
+     * "Proof" field when a chainpoint proof has been generated.
+     *
+     * @param  DataObject $model The {@link DataObject} model subclass with a "Proof" field
+     * @return void
+     */
+    public function queuePing(DataObject $model)
+    {
+        $job = BackendVerificationJob::create()->setObject($model);
+
+        singleton(QueuedJobService::class)->queue($job);
     }
 
 }
