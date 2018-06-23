@@ -17,6 +17,8 @@ use SilverStripe\Versioned\Versioned;
  *
  * Will proxy validation requests to the currently configured backend for both
  * {@link SiteTree} and {@link DataObject} subclasses.
+ *
+ * @todo Take into account LastEdited and Created dates, outside of userland control of verifiable_fields
  */
 class VerificationController extends Controller
 {
@@ -115,6 +117,8 @@ class VerificationController extends Controller
         }
 
         // Basic proof validity check
+        // @todo Beef this up to ensure that a basic regex is run over each to ensure it's all
+        // not just gobbledygook
         if (!$proof->getHashIdNode() || !$proof->getHash() || !$proof->getSubmittedAt()) {
             return self::STATUS_PROOF_INVALID;
         }
@@ -132,7 +136,10 @@ class VerificationController extends Controller
         }
 
         // Compare returned hash matches the re-hash
-        if (!$proof->match($reHash)) {
+        $responsProof = Chainpoint::create()
+                ->setValue($response);
+
+        if (!$responsProof->match($reHash)) {
             return self::STATUS_HASH_INVALID;
         }
     }
