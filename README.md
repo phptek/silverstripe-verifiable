@@ -30,7 +30,7 @@ Incomplete support.
 
 For a more public and visible means of verifiability, we make use of both the [Bitcoin](https://bitcoin.org/) and [Ethereum](https://ethereum.org) blockchain networks. In addition to storing value-based transactions in their native cryptocurrencies, these blockchains are also capable of storing arbitrary strings, making them ideal for storing Merkle Root hashes from which individual "leaf" hashes of data can be mathematically derived.
 
-We make use of REST calls to the [Tieron](https://tieron.com/) blockchain network, which itself writes hashed data to both Bitcoin and Ethereum on a periodic (hourly) basis.
+We make use of REST calls to the [Tierion](https://tierion.com/) blockchain network, which itself writes hashed data to both Bitcoin and Ethereum on a periodic basis.
 
 ## Install
 
@@ -58,15 +58,11 @@ Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's
 
 ## Features
 
-* Authors can automatically send hashes of data-model data for anchoring after a "publish" action
-* Authors can automatically send hashes of uploaded file content
-* Authors can arbitrarily elect to re-verify specific content/document version histories via the CMS
-* An extension for silverstripe/restfulserver, comprising a `verify` endpoint
-* Authors can digitally sign changes, making SilverStripe act as a proxy notary
-* Developers can configure the module to skip the Tierion Network in favour of direct verification via local Bitcoind and Geth clients
-* Developers can configure the module to hash only a subset of model-fields
+* Automatically sends hashes of configurable data-model field-data for anchoring after every write
+* Arbitrarily elect to re-verify specific content/document version histories via the CMS
+* Digitally sign changes, making SilverStripe act as a proxy notary
 * Bitcoin and Ethereum integration via the Tierion Network
-* Trillian integration
+* Google Trillian integration
 
 ## TODO
 
