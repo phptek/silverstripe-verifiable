@@ -32,15 +32,25 @@ class ChainpointProof extends JSONText
     }
 
     /**
+     * Returns the generated value of the proof's "hash" key.
+     *
+     * @return string
+     */
+    public function getHash() : string
+    {
+        $this->setReturnType('array');
+
+        return $this->query('->>', 'hash')['hash'];
+    }
+
+    /**
      * Does the passed $hash match in the stored proof?
      *
-     * @return boolean
+     * @return bool
      */
     public function match(string $hash) : bool
     {
-        $hashFromProof = json_decode($this->getHashIdNode(), true) ?: '';
-
-        return $hash === array_values($hashFromProof)[0];
+        return $hash === $this->getHash();
     }
 
 }

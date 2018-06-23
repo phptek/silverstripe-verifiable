@@ -58,7 +58,7 @@ class VerifiableService
      */
     public function write(array $data)
     {
-        return $this->backend->hashes([$this->hash($data)]);
+        return $this->backend->writeHash([$this->hash($data)]);
     }
 
     /**
@@ -91,9 +91,13 @@ class VerifiableService
      */
     public function isVerifiedPartial(string $body) : bool
     {
-        $anchors = json_decode($body, true)['anchors'];
+        $data = json_decode($body, true);
 
-        return count($anchors) === 1 && $anchors[0]['type'] === 'cal';
+        if (isset($data['anchors_complete']) && count($data['anchors_complete']) === 0) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -104,10 +108,14 @@ class VerifiableService
      */
     public function isVerifiedFull(string $body) : bool
     {
-        $anchors = json_decode($body, true)['anchors'];
+        $data = json_decode($body, true);
+
+        if (empty($data['anchors_complete']) || empty($data['anchors'])) {
+            return false;
+        }
 
         // "Full" means anchors to both Etheruem and Bitcoin blockchains
-        return count($anchors) === 3; // "cal" + "btc" + "eth"
+        return count($data['anchors']) === 3; // "cal" + "btc" + "eth"
     }
 
     /**
@@ -158,7 +166,7 @@ class VerifiableService
     public function hash(array $data) : string
     {
         $func = $this->config()->get('hash_func');
-        $text = implode('', $data);
+        $text = json_encode($data); // Simply used to stringify arrays of arbitary depth
 
         return $func($text);
     }
