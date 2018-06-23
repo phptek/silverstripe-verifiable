@@ -8,9 +8,9 @@
 namespace PhpTek\Verifiable\Backend;
 
 use PhpTek\Verifiable\Backend\BackendProvider;
-use Guzzle\Http\Client;
-use Guzzle\Http\Exception\RequestException;
-use Guzzle\Http\Message\Request;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Request;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use SilverStripe\Core\Injector\Injector;
