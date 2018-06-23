@@ -10,7 +10,7 @@ namespace PhpTek\Verifiable\Backend;
 use PhpTek\Verifiable\Backend\BackendProvider;
 use Guzzle\Http\Client;
 use Guzzle\Http\Exception\RequestException;
-use GuzzleHttp\Psr7\Request;
+use Guzzle\Http\Message\Request;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use SilverStripe\Core\Injector\Injector;
@@ -145,17 +145,18 @@ class Chainpoint implements BackendProvider
      * @param  string                $url
      * @param  string                $verb
      * @param  array                 $payload
+     * @param  bool                  $useBase  Pass "base_uri" to {@link Client}.
      * @return mixed null | Response Guzzle Response object
      * @todo Client()->setSslVerification() if required
      */
-    protected function client(string $url, string $verb, array $payload = [])
+    protected function client(string $url, string $verb = 'GET', array $payload = [], $useBase = true)
     {
         $verb = strtoupper($verb);
         $client = new Client([
-            'base_uri' => $this->fetchNodeUrl(),
-            'timeout'  => $this->config()->get('chainpoint', 'params')['timeout'],
+            'base_uri' => $useBase ? $this->fetchNodeUrl() : '',
+            'timeout'  => $this->config()->get('chainpoint')['params']['timeout'],
         ]);
-        $request = new Request($verb, $url, $payload);
+        $request = new Request($verb, $url);
 
         try {
             return $client->send($request);
@@ -170,6 +171,7 @@ class Chainpoint implements BackendProvider
      * advertised node and calls each until one returns an HTTP 200.
      *
      * @return string
+     * @todo throw exception if the randomly selected node URL returns !200
      */
     protected function fetchNodeUrl()
     {
@@ -179,8 +181,8 @@ class Chainpoint implements BackendProvider
             'https://c.chainpoint.org/nodes/random',
         ];
 
-        $url = $chainpointUrls[rand(1,2)];
-        $response = $this->client($url, 'GET');
+        $url = $chainpointUrls[rand(0,2)];
+        $response = $this->client($url, 'GET', [], false);
 
         foreach (json_decode($response->getBody(), true) as $candidate) {
             $response = $this->client($candidate['public_uri']);

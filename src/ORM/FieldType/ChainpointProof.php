@@ -5,7 +5,7 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Verify;
+namespace PhpTek\Verifiable\ORM\FieldType;
 
 use PhpTek\JSONText\ORM\FieldType\JSONText;
 

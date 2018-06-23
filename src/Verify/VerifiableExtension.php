@@ -8,7 +8,7 @@
 namespace PhpTek\Verifiable\Verify;
 
 use SilverStripe\ORM\DataExtension;
-use PhpTek\Verifiable\Verify\ChainpointProof;
+use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass and declaring a
@@ -42,35 +42,38 @@ class VerifiableExtension extends DataExtension
     private static $verifiable_fields = [];
 
     /**
-     * After each write, the desired data is compiled into a string
+     * After each write data from our verifiable_fields is compiled into a string
      * and submitted as a hash to the current backend.
      *
-     * Once written, we poll the backend to receive the chainpoint proof
-     * which we'll need for subsequent verification checks made against the
-     * backend.
+     * Once written, we poll the backend to receive the full chainpoint proof
+     * which we'll need for subsequent verification checks, also made against the
+     * same backend.
      *
-     * If only the "Proof" field has been written-to, this should not constitute
-     * a write that we need to do anything with, and is therefore ignored.
+     * If only the "Proof" field has been written-to, or no-data is found in the
+     * verifiable_fields, this should not constitute a write that we need to do
+     * anything with, and it's therefore skipped.
      *
-     * @return mixed null | void
+     * @return void
      */
     public function onAfterWrite()
     {
         parent::onAfterWrite();
 
-        // Skip queueing-up a verification process if this is a "create" write
-        if (!$this->getOwner()->exists()) {
-            return;
-        }
+        // Skip queueing-up another verification process if only the "Proof" field
+        // is modified
+        $verifiableFields = $this->getOwner()->config()->get('verifiable_fields');
+        $skipWriteCount = 0;
 
-        // Skip queueing-up another verification process if only "Proof" is modified
-        if ($this->getOwner()->isChanged('Proof')) {
-            return;
+        foreach ($verifiableFields as $field) {
+            if (!$this->getOwner()->getField($field)) {
+                $skipWriteCount++;
+            }
         }
 
         $verifiable = $this->normaliseData();
+        $doWrite = count($verifiable) && (count($verifiableFields) !== $skipWriteCount);
 
-        if (count($verifiable)) {
+        if ($doWrite) {
             $this->verifiableService->write($verifiable);
             $this->verifiableService->queueVerification($this->getOwner());
         }
