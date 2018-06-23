@@ -20,6 +20,13 @@ interface BackendProvider
     public function name() : string;
 
     /**
+     * The name of the hash-function supported by implementors e.g. 'sha256'.
+     *
+     * @return string
+     */
+    public function hashFunc() : string;
+
+    /**
      * Write a hash to this backend.
      *
      * @param  array $hashes An array of one or ore hashes to write to the backend.

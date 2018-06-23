@@ -21,42 +21,13 @@ use SilverStripe\ORM\DataObject;
  * Service class that works as an intermediary between any data model and the
  * currently selected Merkle Tree storage backend.
  *
- * @todo Handle rate-limiting by the Chainpoint network
+ * @todo Handle rate-limiting by the Chainpoint network and by repeated access to this controller
+ * @see https://github.com/chainpoint/chainpoint-node/wiki/Chainpoint-Node-API:-How-to-Create-a-Chainpoint-Proof
  */
 class VerifiableService
 {
     use Injectable;
     use Configurable;
-
-    /**
-     * Represents a failed verification.
-     *
-     * @var string
-     */
-    const STATUS_FAILURE = 'FAIL';
-
-    /**
-     * Represents a passed verification.
-     *
-     * @var string
-     */
-    const STATUS_PASSED = 'PASS';
-
-    /**
-     * Represents a pending verification.
-     *
-     * @var string
-     */
-    const STATUS_PENDING = 'PENDING';
-
-    /**
-     * The hashing function to use.
-     *
-     * @var string
-     * @see {@link $this->hash()}
-     * @config
-     */
-    private static $hash_func = 'sha1';
 
     /**
      * @var BackendProvider
@@ -87,83 +58,23 @@ class VerifiableService
     /**
      * Fetch a chainpoint proof for the passed $hash.
      *
-     * @param  string $hash
+     * @param  string $hashId
      * @return string The JSON-LD chainpoint proof.
      */
-    public function read(string $hash) : string
+    public function read(string $hashId) : string
     {
-        return $this->backend->getProof($hash);
+        return $this->backend->getProof($hashId);
     }
 
     /**
      * Verify the given JSON-LD chainpoint proof against the backend.
      *
      * @param  string $proof A JSON-LD chainpoint proof.
-     * @return bool
+     * @return mixed
      */
-    public function verify(string $proof) : bool
+    public function verify(string $proof)
     {
         return $this->backend->verifyProof($proof);
-    }
-
-    /**
-     * Gives us the current verification status of the given record. Takes into
-     * account the state of the saved proof as well as by making a backend
-     * verification call.
-     *
-     * @param  DataObject $record
-     * @return string
-     */
-    public function getVerificationStatus(DataObject $record)
-    {
-        $proofData = $record->dbObject('Proof')->getStoreAsArray();
-        $fieldData = $record->normaliseData();
-        $proofIsComplete = $this->proofIsComplete($proofData);
-        $proofIsPartial = $this->proofIsPartial($proofData);
-        $proofIsVerified = $record->verify($fieldData, false) === true;
-
-        switch (true) {
-            case $proofIsComplete && $proofIsVerified:
-                return self::STATUS_PASS;
-            case $proofIsPartial:
-                return self::STATUS_PENDING;
-            case $proofIsComplete && !$proofIsVerified:
-            default:
-                return self::STATUS_FAILURE;
-        }
-    }
-
-    /**
-     * Does the passed data response represent a PARTIAL verification as far as
-     * the local database is concerned?
-     *
-     * @param  array $data
-     * @return bool
-     */
-    public function proofIsPartial(array $data) : bool
-    {
-        if (isset($data['anchors_complete']) && count($data['anchors_complete']) === 0) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Does the passed data represent a FULL verification as far as the local database
-     * is concerned?
-     *
-     * @param  array $data
-     * @return bool
-     */
-    public function proofIsComplete(array $data) : bool
-    {
-        if (empty($data['anchors_complete']) || empty($data['anchors'])) {
-            return false;
-        }
-
-        // "Full" means anchors to both Etheruem and Bitcoin blockchains
-        return count($data['anchors']) === 3; // "cal" + "btc" + "eth"
     }
 
     /**
@@ -213,10 +124,10 @@ class VerifiableService
      */
     public function hash(array $data) : string
     {
-        $func = $this->config()->get('hash_func');
+        $func = $this->backend->hashFunc();
         $text = json_encode($data); // Simply used to stringify arrays of arbitary depth
 
-        return $func($text);
+        return hash($func, $text);
     }
 
     /**

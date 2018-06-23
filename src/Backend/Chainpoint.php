@@ -61,40 +61,50 @@ class Chainpoint implements BackendProvider
     }
 
     /**
-     * @param  string $hash
      * @return string
-     * @throws VerifiableBackendException
+     */
+    public function hashFunc() : string
+    {
+        return 'sha256';
+    }
+
+    /**
+     * Send a single hash_id_node to retrieve a proof from the backend.
+     *
+     * GETs to the: "/proofs" REST API endpoint.
+     *
+     * @param  string $hashIdNode
+     * @return string (From GuzzleHttp\Stream::getContents()
      * @todo Rename to proofs() as per the "gateway" we're calling
      */
-    public function getProof(string $hash) : string
+    public function getProof(string $hashIdNode) : string
     {
-        $response = $this->client("/proofs/$hash", 'GET');
+        $response = $this->client("/proofs/$hashIdNode", 'GET');
 
-        if ($response->getStatusCode() !== 200) {
-            throw new VerifiableBackendException('Unable to fetch proof from backend.');
-        }
-
-        return $response->getBody();
+        return $response->getBody()->getContents() ?? '[]';
     }
 
     /**
      * Send an array of hashes for anchoring.
      *
+     * POSTs to the: "/hashes" REST API endpoint.
+     *
      * @param  array $hashes
-     * @return string
+     * @return string (From GuzzleHttp\Stream::getContents()
      * @todo Rename to hashes() as per the "gateway" we're calling
      */
     public function writeHash(array $hashes) : string
     {
         $response = $this->client('/hashes', 'POST', ['hashes' => $hashes]);
 
-        return $response->getBody();
+        return $response->getBody()->getContents() ?? '[]';
     }
 
     /**
      * Submit a chainpoint proof to the backend for verification.
      *
-     * @param  string $proof A SHA1 hash to send to the remote backend for verification.
+     * @param  string $proof A partial or full JSON string, originally received from,
+     *                       or generated on behalf of, a backend.
      * @return bool
      * @todo See the returned proof's "uris" key, to be able to call a specific URI for proof verification.
      */
@@ -107,12 +117,13 @@ class Chainpoint implements BackendProvider
         }
 
         $response = $this->client('/verify', 'POST', ['proofs' => [$proof]]);
+        $contents = $response->getBody()->getContents();
 
-        if ($response->getBody()->getContents() === '[]') {
+        if ($contents === '[]') {
             return false;
         }
 
-        return json_decode($response->getBody(), true)['status'] === 'verified';
+        return json_decode($contents, true)['status'] === 'verified';
     }
 
     /**
@@ -224,6 +235,7 @@ class Chainpoint implements BackendProvider
      * @throws VerifiableBackendException
      * @todo Set the URL as a class-property and re-use that, rather than re-calling fetchNodeUrl()
      * @todo Make this method re-entrant and try a different URL
+     * @todo Rename method to
      */
     protected function fetchNodeUrl()
     {

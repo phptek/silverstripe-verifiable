@@ -118,41 +118,23 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
-     * Gateway method into the whole package's functionality.
-     *
      * Passed an array of fields and their values, this method will hash them
      * and check that a chainpoint proof exists in the local database. If unsuccessful
-     * we return false. Otherwise, we continue and consult the backend for the
-     * same proof.
+     * we return false. Otherwise, we return true.
      *
-     * If a matching proof is found both locally and in the backed, then the supplied
-     * data is said to be verified. Note: See the $strict param to skip the
-     * local proof check.
+     * If a matching proof is found both locally then the supplied
+     * data is said to have been verified at least once
      *
-     * @param  array  $data   An array of data to verify against the current backend.
-     * @param  bool   $strict True by default; That-is both the local database and
-     *                        the backend are consulted for a valid proof. If set
-     *                        to false, we bypass the local check and just consult
-     *                        the backend directly.
-     * @return bool           True if the backend verifies the proof, false otherwise.
+     * @param  array $data An array of data to verify against the current backend.
+     * @return mixed null | ChainpointProof
      */
-    public function verify(array $data, bool $strict = true) : bool
+    public function proofExists(array $data)
     {
         $hash = $this->verifiableService->hash($data);
         $proof = $this->getOwner()->dbObject('Proof');
 
-        // 1). Does the passed hash-of-the-data match the hash in the Proof?
-        if (!$proof->exists() || $proof->getHash() !== $hash) {
-            return false;
-        }
-
-        // 2). Send the local proof to the backend for verification
-        if (!$this->verifiableService->verify($proof->getHash())) {
-            return false;
-        }
-
-        // 3). Verification complete
-        return true;
+        // Does the passed hash-of-the-data match the hash in the Proof?
+        return $proof->exists() && $proof->getHash() === $hash ? $proof : null;
     }
 
     /**

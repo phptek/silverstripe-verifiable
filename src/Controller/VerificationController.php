@@ -20,12 +20,32 @@ use SilverStripe\Versioned\Versioned;
  */
 class VerificationController extends Controller
 {
+    /**
+     * Represents a failed verification.
+     *
+     * @var string
+     */
+    const STATUS_FAILURE = 'FAIL';
+
+    /**
+     * Represents a passed verification.
+     *
+     * @var string
+     */
+    const STATUS_PASSED = 'PASS';
+
+    /**
+     * Represents a pending verification.
+     *
+     * @var string
+     */
+    const STATUS_PENDING = 'PENDING';
 
     /**
      * @var array
      */
     private static $allowed_actions = [
-        'verify',
+        'verifyhash',
     ];
 
     /**
@@ -41,9 +61,8 @@ class VerificationController extends Controller
      *
      * @param  HTTPRequest $request
      * @return void
-     * @todo Update "Status" to be one of: "Pending" | "Verified" | "Failed"
      */
-    public function verify(HTTPRequest $request)
+    public function verifyhash(HTTPRequest $request)
     {
         $class = $request->param('ClassName');
         $id = $request->param('ModelID');
@@ -59,14 +78,53 @@ class VerificationController extends Controller
             return $this->httpError(400, 'Bad request');
         }
 
+        if (!$record->getField('Proof')) {
+            return $this->httpError(400, 'Bad request');
+        }
+
         $response = json_encode([
             'RecordID' => "$record->RecordID",
             'Version' => "$record->Version",
             'Class' => get_class($record),
-            'Status' => $this->verifiableService->getVerificationStatus($record),
+            'Submitted' => $record->dbObject('Proof')->getSubmittedAt(),
+            'Status' => $this->getVerificationStatus($record),
         ], JSON_UNESCAPED_UNICODE);
 
         $this->renderJSON($response);
+    }
+
+    /**
+     * Gives us the current verification status of the given record. Takes into
+     * account the state of the saved proof as well as by making a backend
+     * verification call.
+     *
+     * @param  StdClass $record
+     * @return string
+     * @todo What _is_ verification? That verifiable_fields data has NOT changed:
+     *  1. If no full local proof: false
+     *  2. If sending local proof to /verify fails: false, otherwise;
+     *  3. Re-calculate hash
+     *  4. Compare against local "Proof::hash()"
+     *  5. Send hash-value to /proofs to see if we get a valid proof back
+     *  6. Is Valid proof? Yes: Verified. No? Tampered-with
+     */
+    public function getVerificationStatus($record)
+    {
+        $hashToVerify = $this->verifiableService->hash($record->normaliseData()); // <-- Could have been tampered-with
+        $hashIsVerified = $this->verifiableService->verify($hashToVerify);
+        $proofData = $record->getField('Proof');
+        $proofIsPartial = $this->verifiableService->proofIsPartial($proofData);
+        $proofIsComplete = $this->verifiableService->proofIsComplete($proofData);
+
+        switch (true) {
+            case $proofIsComplete && !$hashIsVerified:
+            default:
+                return self::STATUS_FAILURE;
+            case $proofIsPartial && !$hashIsVerified:
+                return self::STATUS_PENDING;
+            case $proofIsComplete && $proofIsVerified:
+                return self::STATUS_PASS;
+        }
     }
 
     /**
