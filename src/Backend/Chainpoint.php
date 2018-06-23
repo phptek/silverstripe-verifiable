@@ -80,10 +80,10 @@ class Chainpoint implements BackendProvider
      *
      * @param  string $proof A partial or full JSON string, originally received from,
      *                       or generated on behalf of, a backend.
-     * @return bool
+     * @return string
      * @todo See the returned proof's "uris" key, to be able to call a specific URI for proof verification.
      */
-    public function verifyProof(string $proof) : bool
+    public function verifyProof(string $proof) : string
     {
         // Consult blockchains directly, if so configured and suitable
         // blockchain full-nodes are available to our RPC connections
@@ -92,13 +92,8 @@ class Chainpoint implements BackendProvider
         }
 
         $response = $this->client('/verify', 'POST', ['proofs' => [$proof]]);
-        $contents = $response->getBody()->getContents() ?? '[]';
 
-        if ($contents === '[]') {
-            return false;
-        }
-
-        return json_decode($contents, true)['status'] === 'verified';
+        return $response->getBody()->getContents() ?? '[]';
     }
 
     /**
@@ -154,7 +149,6 @@ class Chainpoint implements BackendProvider
             'timeout'  => $config['timeout'],
             'connect_timeout'  => $config['connect_timeout'],
             'allow_redirects' => false,
-            'user-agent' => \GuzzleHttp\default_user_agent(),
         ]);
 
         try {
@@ -182,6 +176,8 @@ class Chainpoint implements BackendProvider
      */
     protected function discoverNode()
     {
+        return 'http://35.230.179.171/';
+
         $chainpointUrls = $this->config()->get('chainpoint_urls');
         $url = $chainpointUrls[rand(0,2)];
         $response = $this->client($url, 'GET', [], false);

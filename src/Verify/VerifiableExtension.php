@@ -14,7 +14,6 @@ use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\ToggleCompositeField;
-use SilverStripe\ORM\ArrayList;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass and declaring a
@@ -67,6 +66,8 @@ class VerifiableExtension extends DataExtension
      */
     public function onBeforeWrite()
     {
+        parent::onBeforeWrite();
+
         $verifiable = $this->normaliseData();
 
         if (count($verifiable) && $proofData = $this->verifiableService->write($verifiable)) {
@@ -76,8 +77,6 @@ class VerifiableExtension extends DataExtension
 
             $this->getOwner()->setField('Proof', $proofData);
         }
-
-        parent::onBeforeWrite();
     }
 
     /**

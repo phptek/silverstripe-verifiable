@@ -47,6 +47,6 @@ interface BackendProvider
      * @param  string $proof  A valid JSIN-LD chainpoint proof
      * @return bool
      */
-    public function verifyProof(string $proof) : bool;
+    public function verifyProof(string $proof) : string;
 
 }

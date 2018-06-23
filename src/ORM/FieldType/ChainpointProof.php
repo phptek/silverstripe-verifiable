@@ -49,6 +49,18 @@ class ChainpointProof extends JSONText
     }
 
     /**
+     * Returns the generated value of the proof's "status" key.
+     *
+     * @return string
+     */
+    public function getStatus() : string
+    {
+        $this->setReturnType('array');
+
+        return $this->query('->>', 'status')['status'];
+    }
+
+    /**
      * Returns the generated value of the proof's "submitted_at" key.
      *
      * @return string
@@ -58,6 +70,18 @@ class ChainpointProof extends JSONText
         $this->setReturnType('array');
 
         return $this->query('->>', 'submitted_at')['submitted_at'];
+    }
+
+    /**
+     * Returns the generated value of the proof's "proof" key.
+     *
+     * @return string
+     */
+    public function getProof() : string
+    {
+        $this->setReturnType('array');
+
+        return $this->query('->>', 'proof')['proof'];
     }
 
     /**

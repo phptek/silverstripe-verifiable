@@ -75,6 +75,13 @@ class VerificationController extends Controller
     const STATUS_VERIFIED = 'Verified';
 
     /**
+     * All checks passed. But submitted hash is not yet verified.
+     *
+     * @var string
+     */
+    const STATUS_UNVERIFIED = 'Unverified';
+
+    /**
      * All local checks passed. Submitted hash is currently pending.
      *
      * @var string
@@ -181,26 +188,25 @@ class VerificationController extends Controller
             return self::STATUS_UUID_INVALID;
         }
 
-        // Send that binary hash back to the remote and retrieve the stored hash
-        // Could be a full or a partial response
-        $responseProof = ChainpointProof::create()->setValue($responseBinary);
+        $responseBinaryProof = ChainpointProof::create()->setValue($responseBinary);
+        $responseVerify = $this->verifiableService->verify($responseBinaryProof->getProof());
 
-        if ($responseProof->isPartial()) {
-            return self::STATUS_PENDING;
-        }
-
-        if (!$responseJson = $this->verifiableService->verify($responseBinary)) {
+        if ($responseVerify === '[]') {
             return self::STATUS_HASH_REMOTE_INVALID_NO_DATA;
         }
 
         // Compare returned hash matches the re-hash
-        $responseProof = ChainpointProof::create()->setValue($responseJson);
+        $responseProof = ChainpointProof::create()->setValue($responseVerify);
 
         if (!$responseProof->match($reHash)) {
             return self::STATUS_HASH_REMOTE_INVALID_NO_HASH;
         }
 
-        return self::STATUS_VERIFIED;
+        if ($responseProof->getStatus() === 'verified') {
+            return self::STATUS_VERIFIED;
+        }
+
+        return self::STATUS_UNVERIFIED;
     }
 
     /**
