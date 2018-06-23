@@ -33,7 +33,13 @@ class ChainpointProof extends JSONText
     {
         $this->setReturnType('array');
 
-        return $this->query('->>', 'hash_id_node')['hash_id_node'];
+        $field = 'hash_id_node';
+
+        if (!empty($value = $this->query('->>', $field))) {
+            return $value[$field];
+        }
+
+        return '';
     }
 
     /**
@@ -45,7 +51,13 @@ class ChainpointProof extends JSONText
     {
         $this->setReturnType('array');
 
-        return $this->query('->>', 'hash')['hash'];
+        $field = 'hash';
+
+        if (!empty($value = $this->query('->>', $field))) {
+            return $value[$field];
+        }
+
+        return '';
     }
 
     /**
@@ -57,7 +69,13 @@ class ChainpointProof extends JSONText
     {
         $this->setReturnType('array');
 
-        return $this->query('->>', 'status')['status'];
+        $field = 'status';
+
+        if (!empty($value = $this->query('->>', $field))) {
+            return $value[$field];
+        }
+
+        return '';
     }
 
     /**
@@ -69,7 +87,13 @@ class ChainpointProof extends JSONText
     {
         $this->setReturnType('array');
 
-        return $this->query('->>', 'submitted_at')['submitted_at'];
+        $field = 'submitted_at';
+
+        if (!empty($value = $this->query('->>', $field))) {
+            return $value[$field];
+        }
+
+        return '';
     }
 
     /**
@@ -81,7 +105,13 @@ class ChainpointProof extends JSONText
     {
         $this->setReturnType('array');
 
-        return $this->query('->>', 'proof')['proof'];
+        $field = 'proof';
+
+        if (!empty($value = $this->query('->>', $field))) {
+            return $value[$field];
+        }
+
+        return '';
     }
 
     /**

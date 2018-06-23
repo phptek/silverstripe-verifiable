@@ -130,21 +130,4 @@ class VerifiableService
         return hash($func, $text);
     }
 
-    /**
-     * Setup a {@link QueuedJob} to ping a backend and update the passed dataobject's
-     * "Proof" field when a chainpoint proof has been generated.
-     *
-     * @param  DataObject $model The {@link DataObject} model subclass with a "Proof" field
-     * @return void
-     */
-    public function queueVerification(DataObject $model)
-    {
-        $job = new BackendVerificationJob();
-        $job->setObject($model);
-        // Ping the backend 1 hour hence
-        $time = date('Y-m-d H:i:s', time() + 3600);
-
-        singleton(QueuedJobService::class)->queueJob($job, $time);
-    }
-
 }

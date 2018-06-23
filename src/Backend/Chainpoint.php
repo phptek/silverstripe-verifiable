@@ -26,6 +26,13 @@ class Chainpoint implements BackendProvider
     use Configurable;
 
     /**
+     * An array of chainpoint nodes for submitting hashes to.
+     *
+     * @var array
+     */
+    protected static $discovered_nodes = [];
+
+    /**
      * @return string
      */
     public function name() : string
@@ -137,14 +144,24 @@ class Chainpoint implements BackendProvider
      * @todo Use promises to send concurrent requests: 1). Find a node 2). Pass node URL to second request
      * @todo Use 'body' in POST requests?
      * @todo Port to dedicated ChainpointClient class
+     * @todo Use multiple
      */
     protected function client(string $url, string $verb, array $payload = [], bool $simple = true)
     {
+        if ($simple && !static::$discovered_nodes) {
+            $this->discoverNodes();
+
+            // This should _never_ happen..
+            if (!static::$discovered_nodes) {
+                throw new VerifiableValidationException('No chainpoint nodes discovered!');
+            }
+        }
+
         $verb = strtoupper($verb);
         $method = strtolower($verb);
         $config = $this->config()->get('client_config');
         $client = new Client([
-            'base_uri' => $simple ? $this->discoverNode() : '',
+            'base_uri' => $simple ? static::$discovered_nodes[0] : '',
             'verify' => true,
             'timeout'  => $config['timeout'],
             'connect_timeout'  => $config['connect_timeout'],
@@ -169,29 +186,38 @@ class Chainpoint implements BackendProvider
      * IPs of each advertised and audited node, then calls each one until one responds
      * with an HTTP 200 and returns it.
      *
-     * @return string
+     * @param  int  $limit The number of nodes to send hashes to
+     * @return void
      * @throws VerifiableBackendException
      * @todo Set the URL as a class-property and re-use that, rather than re-calling discoverNode()
      * @todo Make this method re-entrant and try a different URL
      */
-    protected function discoverNode()
+    public function discoverNodes(int $limit = 3)
     {
-        return 'http://35.230.179.171/';
-
         $chainpointUrls = $this->config()->get('chainpoint_urls');
         $url = $chainpointUrls[rand(0,2)];
         $response = $this->client($url, 'GET', [], false);
 
+        // TODO: Instead of throwing exception, re-call discoverNodes() and try a new URL
         if ($response->getStatusCode() !== 200) {
             throw new VerifiableBackendException('Bad response from node source URL');
         }
 
+        $i = 0;
+
         foreach (json_decode($response->getBody(), true) as $candidate) {
             $response = $this->client($candidate['public_uri'], 'GET', [], false);
 
-            // If for some reason we don't get a response: Do re-entrant method
-            if ($response->getStatusCode() === 200) {
-                return $candidate['public_uri'];
+            if ($response->getStatusCode() !== 200) {
+                continue;
+            }
+
+            ++$i; // Only increment on succesful requests
+
+            static::$discovered_nodes[] = $candidate['public_uri'];
+
+            if ($i == $limit) {
+                break;
             }
         }
     }

@@ -78,7 +78,7 @@ class Trillian implements BackendProvider
     public function getProof(string $hash) : string
     {
         if (!$this->connect()) {
-            return [];
+            return '';
         }
     }
 
@@ -86,7 +86,7 @@ class Trillian implements BackendProvider
      *
      * {@inheritdoc}
      */
-    public function verifyProof(string $proof) : bool
+    public function verifyProof(string $proof) : string
     {
 
     }

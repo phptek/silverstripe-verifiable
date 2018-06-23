@@ -115,15 +115,15 @@ class VerificationController extends Controller
     {
         $class = $request->param('ClassName');
         $id = $request->param('ModelID');
-        $vid = $request->param('VersionID');
+        $version = $request->param('VersionID');
 
         if (empty($id) || !is_numeric($id) ||
-                empty($vid) || !is_numeric($vid) ||
+                empty($version) || !is_numeric($version) ||
                 empty($class)) {
             return $this->httpError(400, 'Bad request');
         }
 
-        if (!$record = $this->getVersionedRecord($class, $id, $vid)) {
+        if (!$record = Versioned::get_version($class, $id, $version)) {
             return $this->httpError(400, 'Bad request');
         }
 
@@ -176,7 +176,7 @@ class VerificationController extends Controller
         }
 
         // Comparison check between locally stored proof, and re-hashed record data
-        if (!$proof->match($reHash = $this->verifiableService->hash($record->normaliseData()))) {
+        if ($proof->getHash() !== $foo = $this->verifiableService->hash($record->normaliseData())) {
             return self::STATUS_HASH_LOCAL_INVALID;
         }
 
@@ -189,7 +189,7 @@ class VerificationController extends Controller
         }
 
         $responseBinaryProof = ChainpointProof::create()->setValue($responseBinary);
-        $responseVerify = $this->verifiableService->verify($responseBinaryProof->getProof());
+        $responseVerify = $this->verifiableService->verify($responseBinaryProof);
 
         if ($responseVerify === '[]') {
             return self::STATUS_HASH_REMOTE_INVALID_NO_DATA;
@@ -210,20 +210,6 @@ class VerificationController extends Controller
     }
 
     /**
-     * Fetch a record directly from the relevant table, for the given class
-     * and ID.
-     *
-     * @param  string     $class   A fully-qualified PHP class name.
-     * @param  int        $id      The "RecordID" of the desired Versioned record.
-     * @param  int        $version The "Version" of the desired Versioned record.
-     * @return mixed null | DataObject
-     */
-    private function getVersionedRecord(string $class, int $id, int $version)
-    {
-        return Versioned::get_version($class, $id, $version);
-    }
-
-    /**
      * Properly return JSON, allowing consumers to render returned JSON correctly.
      *
      * @param  string $json
@@ -232,9 +218,7 @@ class VerificationController extends Controller
     private function renderJSON(string $json)
     {
         header('Content-Type: application/json');
-
         echo $json;
-
         exit(0);
     }
 
