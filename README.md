@@ -6,13 +6,11 @@
 
 ## What is this?
 
-...A WORK IN PROGRESS...
-
-A module for SilverStripe applications that provides content authors and business owners with the ability to verify the integrity of their data over time; Data entered by an author can be verified independently, and perhaps for many years after the fact.
-
-Software users have for decades taken it for granted that their application's data is safe from tampering. That developers, vendors, DBA's and even power-users, are somehow above tampering with things that affect data integrity. Application users simply trust that these parties will not behave in a manner counter to the security and integrity of an application's data.
+For decades software users have taken it for granted that their application's data is safe from tampering. That developers, vendors, DBA's and even power-users, are somehow above tampering with things that affect data integrity. We trust that these parties will not behave in a manner counter to the security and integrity of an application's data.
 
 But what do we mean by "integrity"? Well we don't mean "tamper proof" becuase there can never be any such guarantee. However we can do "Verified Data"; data who's integrity is mathatically proveable. If something changes then an audit-trail of sorts is available that can be consulted.
+
+This is an addon for SilverStripe applications that provides content authors and business owners with the ability to verify the integrity of their data over time; Data entered by an author can be verified independently, and perhaps for many years after the fact.
 
 ## How does it work?
 
@@ -52,3 +50,13 @@ My\Name\Space\Model\MyModel:
 ```
 
 Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.
+
+## Features
+
+* Authors can automatically send hashes for anchoring after a "publish" action
+* Authors can arbitrarily elect to re-verify specific content/document version histories via the CMS
+* Authors can digitally sign changes, making SilverStripe act as a proxy notary
+* Developers can configure the module to skip the Tierion Network in favour of direct verification via local Bitcoind and Geth clients
+* Developers can configure the module to hash only a subset of model-fields
+* Bitcoin and Ethereum integration via the Tierion Network
+* Trillian integration
