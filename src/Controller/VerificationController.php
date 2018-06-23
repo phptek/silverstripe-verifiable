@@ -11,6 +11,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Versioned\Versioned;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
+use SilverStripe\ORM\ValidationException;
 
 /**
  * Accepts incoming requests for data verification e.g. from within the CMS
@@ -81,6 +82,13 @@ class VerificationController extends Controller
     const STATUS_PENDING = 'Pending';
 
     /**
+     * Some kind of upstream error.
+     *
+     * @var string
+     */
+    const STATUS_UPSTREAM_ERROR = 'Upstream Error';
+
+    /**
      * @var array
      */
     private static $allowed_actions = [
@@ -112,11 +120,17 @@ class VerificationController extends Controller
             return $this->httpError(400, 'Bad request');
         }
 
+        try {
+            $status = $this->getVerificationStatus($record);
+        } catch (ValidationException $ex) {
+            $status = self::STATUS_UPSTREAM_ERROR;
+        }
+
         $response = json_encode([
             'RecordID' => "$record->RecordID",
             'Version' => "$record->Version",
             'Class' => get_class($record),
-            'Status' => $this->getVerificationStatus($record),
+            'Status' => $status,
         ], JSON_UNESCAPED_UNICODE);
 
         $this->renderJSON($response);

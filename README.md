@@ -57,7 +57,7 @@ PhpTek\Verifiable\Verify\VerifiableService:
 Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.
 
 ## Features
-
+    
 * Automatically sends hashes of configurable data-model field-data for anchoring after every write
 * Arbitrarily elect to re-verify specific content/document version histories via the CMS
 * Digitally sign changes, making SilverStripe act as a proxy notary
