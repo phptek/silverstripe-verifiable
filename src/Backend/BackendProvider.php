@@ -22,10 +22,10 @@ interface BackendProvider
     /**
      * Write a hash to this backend.
      *
-     * @param  string $hash The hashed data to be written
-     * @return string       A valid JSON-LD ChainPoint Proof
+     * @param  array $hashes An array of one or ore hashes to write to the backend.
+     * @return string        A valid JSON-LD ChainPoint Proof
      */
-    public function writeHash(string $hash) : string;
+    public function writeHash(array $hash) : string;
 
     /**
      * Read a proof from this backend.

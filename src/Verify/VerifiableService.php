@@ -57,7 +57,7 @@ class VerifiableService
      */
     public function write(array $data) : bool
     {
-        return $this->backend->writeHash($this->hash($data));
+        return $this->backend->writeHash([$this->hash($data)]);
     }
 
     /**

@@ -16,7 +16,11 @@ use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use SilverStripe\Core\Injector\Injector;
 
 /**
- * See: https://chainpoint.org
+ * Calls the endpoints of the chainpoint.org (Tierion?) network. Based on the Swagger
+ * docs found here: https://app.swaggerhub.com/apis/chainpoint/node/1.0.0.
+ *
+ * @see https://chainpoint.org
+ * @see https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
  */
 class Chainpoint implements BackendProvider
 {
@@ -27,8 +31,8 @@ class Chainpoint implements BackendProvider
      * connection details for each one's locally-installed full-node.
      *
      * Tieron supports Bitcoin and Ethereum, but there's nothing to stop custom
-     * routines and config appropriating an additional blockxhain network to which
-     * proofs can be saved e.g. a local Hyperledger Fabric network.
+     * routines and config appropriating an additional blockchain network to which
+     * proofs can be saved e.g. a "local" Hyperledger Fabric network.
      *
      * @var array
      * @config
@@ -76,9 +80,9 @@ class Chainpoint implements BackendProvider
      * @param  string $hash
      * @return string
      */
-    public function writeHash(string $hash) : string
+    public function writeHash(array $hashes) : string
     {
-        $response = $this->client('/hashes', 'POST', ['hashes' => $hash]);
+        $response = $this->client('/hashes', 'POST', ['hashes' => $hashes]);
 
         if ($response->getStatusCode() !== 200) {
             throw new VerifiableBackendException('Unable to write hash to backend.');
@@ -148,15 +152,20 @@ class Chainpoint implements BackendProvider
      * @param  bool                  $useBase  Pass "base_uri" to {@link Client}.
      * @return mixed null | Response Guzzle Response object
      * @todo Client()->setSslVerification() if required
+     * @todo This request can take some time...consider queuing it?
      */
-    protected function client(string $url, string $verb = 'GET', array $payload = [], $useBase = true)
+    protected function client(string $url, string $verb = 'GET', array $payload = [], bool $useBase = true)
     {
-        $verb = strtoupper($verb);
         $client = new Client([
             'base_uri' => $useBase ? $this->fetchNodeUrl() : '',
             'timeout'  => $this->config()->get('chainpoint')['params']['timeout'],
         ]);
-        $request = new Request($verb, $url);
+        $request = new Request(
+            strtoupper($verb),
+            $url,
+            [],
+            $payload ? json_encode($payload) : null
+        );
 
         try {
             return $client->send($request);

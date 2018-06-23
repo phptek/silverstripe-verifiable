@@ -97,12 +97,16 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
-     * Central to the whole package, this method is passed an array of fields
-     * and their values, hashes them and will check that a chainpoint proof
-     * exists in the local database. If unsuccessful, we return false.
-     * Otherwise, we continue and consult the backend for the same proof. If one
-     * is found both locally and in the backed, then the supplied data is said to
-     * be verified. Note: See the $strict param to skip the local proof check.
+     * Gateway method into the whole package's functionality.
+     *
+     * Passed an array of fields and their values, this method will hash them
+     * and check that a chainpoint proof exists in the local database. If unsuccessful
+     * we return false. Otherwise, we continue and consult the backend for the
+     * same proof.
+     *
+     * If a matching proof is found both locally and in the backed, then the supplied
+     * data is said to be verified. Note: See the $strict param to skip the
+     * local proof check.
      *
      * @param  array  $data   An array of data to verify against the current backend.
      * @param  bool   $strict True by default; That-is both the local database and
@@ -120,6 +124,8 @@ class VerifiableExtension extends DataExtension
         if (!$proof->match($hash)) {
             return false;
         }
+
+        // TODO Verify data in "Proof" field
 
         // 2). Send the local proof to the backend for verification
         if (!$this->verificationService->verify($proof)) {
