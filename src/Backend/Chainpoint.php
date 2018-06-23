@@ -96,7 +96,7 @@ class Chainpoint implements BackendProvider
     /**
      * Submit a chainpoint proof to the backend for verification.
      *
-     * @param  string $proof A valid JSON-LD Chainpoint Proof.
+     * @param  string $proof A SHA1 hash to send to the remote backend for verification.
      * @return bool
      * @todo See the returned proof's "uris" key, to be able to call a specific URI for proof verification.
      */

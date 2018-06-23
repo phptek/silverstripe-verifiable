@@ -20,6 +20,8 @@ use SilverStripe\ORM\DataObject;
 /**
  * Service class that works as an intermediary between any data model and the
  * currently selected Merkle Tree storage backend.
+ *
+ * @todo Handle rate-limiting by the Chainpoint network
  */
 class VerifiableService
 {
@@ -71,11 +73,11 @@ class VerifiableService
     }
 
     /**
-     * Write a hash of data as per the "verifiable_fields" confifg static on each
+     * Write a hash of data as per the "verifiable_fields" config static on each
      * {@link DataObject}.
      *
      * @param  array $data
-     * @return mixed  The result of this call to the backend.
+     * @return mixed The result of this call to the backend.
      */
     public function write(array $data)
     {
@@ -101,12 +103,13 @@ class VerifiableService
      */
     public function verify(string $proof) : bool
     {
-        return $this->backend->verify($proof);
+        return $this->backend->verifyProof($proof);
     }
 
     /**
      * Gives us the current verification status of the given record. Takes into
-     * account the state of the saved proof and a backend verification call.
+     * account the state of the saved proof as well as by making a backend
+     * verification call.
      *
      * @param  DataObject $record
      * @return string
@@ -225,7 +228,8 @@ class VerifiableService
      */
     public function queueVerification(DataObject $model)
     {
-        $job = BackendVerificationJob::create()->setObject($model);
+        $job = new BackendVerificationJob();
+        $job->setObject($model);
         // Ping the backend 1 hour hence
         $time = date('Y-m-d H:i:s', time() + 3600);
 

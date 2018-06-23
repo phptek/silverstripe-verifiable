@@ -3,7 +3,7 @@
     "type": "silverstripe-vendormodule",
     "license": "BSD-3-Clause",
     "description": "Cryptographically verify data hasn't changed, by reference to a Blockchain or other Merkle Tree storage.",
-    "keywords": ["silverstripe", "verify", "verifiable", "blockchain", "merkle"],
+    "keywords": ["silverstripe", "verify", "verifiable", "blockchain", "merkle", "bitcoin", "ethereum", "trillian"],
     "authors": [
         {
             "name": "Russell Michell",
