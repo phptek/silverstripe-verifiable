@@ -64,7 +64,7 @@ class ChainpointProof extends JSONText
      * @param  mixed $input
      * @return bool
      */
-    public function isPartiallyComplete($input = null) : bool
+    public function isPartial($input = null) : bool
     {
         $data = $data ?? $this->getStoreAsArray();
 

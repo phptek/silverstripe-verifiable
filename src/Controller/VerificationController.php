@@ -112,9 +112,9 @@ class VerificationController extends Controller
     {
         $hashToVerify = $this->verifiableService->hash($record->normaliseData()); // <-- Could have been tampered-with
         $hashIsVerified = $this->verifiableService->verify($hashToVerify);
-        $proofData = $record->getField('Proof');
-        $proofIsPartial = $this->verifiableService->proofIsPartial($proofData);
-        $proofIsComplete = $this->verifiableService->proofIsComplete($proofData);
+        $proof = $record->dbObject('Proof');
+        $proofIsPartial = $proof->isPartial();
+        $proofIsComplete = $proof->isComplete();
 
         switch (true) {
             case $proofIsComplete && !$hashIsVerified:
@@ -122,7 +122,7 @@ class VerificationController extends Controller
                 return self::STATUS_FAILURE;
             case $proofIsPartial && !$hashIsVerified:
                 return self::STATUS_PENDING;
-            case $proofIsComplete && $proofIsVerified:
+            case $proofIsComplete && $hashIsVerified:
                 return self::STATUS_PASS;
         }
     }
