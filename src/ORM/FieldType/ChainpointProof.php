@@ -17,6 +17,8 @@ use PhpTek\JSONText\ORM\FieldType\JSONText;
  * its raw JSONQuery calls.
  *
  * @todo Add support for exporting in MsgPack format (http://msgpack.org/index.html)
+ * @todo Create a new JSONText subclass called "VerifiableFields" and use it to store
+ * the verifiable_fields originally used to hash this record's data.
  */
 class ChainpointProof extends JSONText
 {
@@ -55,6 +57,17 @@ class ChainpointProof extends JSONText
         $this->setReturnType('array');
 
         return $this->query('->>', 'submitted_at')['submitted_at'];
+    }
+
+    /**
+     * Attempts to match a hash against a locally stored proof.
+     *
+     * @param string $hash
+     * @return bool
+     */
+    public function match(string $hash)
+    {
+        return $this->getHash() === $hash;
     }
 
     /**

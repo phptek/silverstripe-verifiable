@@ -10,7 +10,9 @@ namespace PhpTek\Verifiable\Verify;
 use SilverStripe\ORM\DataExtension;
 use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\DropdownField;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass and declaring a
@@ -24,7 +26,7 @@ use SilverStripe\Forms\LiteralField;
  *       fail because differing hash functions are used, throw an exception.
  * @todo Hard-code "Created" and "LastEdited" fields into "verifiable_fields"
  * @todo Prevent "Proof" field from ever being configured in verifiable_fields
- *
+ * @todo Use AsyncPHP to make the initial write call to the backend, wait ~15s and then request a proof in return
  */
 class VerifiableExtension extends DataExtension
 {
@@ -118,26 +120,6 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
-     * Passed an array of fields and their values, this method will hash them
-     * and check that a chainpoint proof exists in the local database. If unsuccessful
-     * we return false. Otherwise, we return true.
-     *
-     * If a matching proof is found both locally then the supplied
-     * data is said to have been verified at least once
-     *
-     * @param  array $data An array of data to verify against the current backend.
-     * @return mixed null | ChainpointProof
-     */
-    public function proofExists(array $data)
-    {
-        $hash = $this->verifiableService->hash($data);
-        $proof = $this->getOwner()->dbObject('Proof');
-
-        // Does the passed hash-of-the-data match the hash in the Proof?
-        return $proof->exists() && $proof->getHash() === $hash ? $proof : null;
-    }
-
-    /**
      * Writes string data that is assumed to be JSON (as returned from a
      * web-service for example) and saved to this decorated object's "Proof"
      * field.
@@ -157,6 +139,8 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
+     * Adds a "Verification" tab to the CMS.
+     *
      * @param  FieldList $fields
      * @return void
      */
@@ -164,11 +148,15 @@ class VerifiableExtension extends DataExtension
     {
         parent::updateCMSFields($fields);
 
-        $class = get_class($this->getOwner());
-        $id = $this->getOwner()->ID;
-        $content = sprintf('<p class="verification-field"><a href="/verify/%s/%d">Verifiy</a>', $class, $id);
+        $owner = $this->getOwner();
+        $list = $owner->Versions();
 
-        $fields->insertBefore('Title', LiteralField::create('verify', $content));
+        $fields->addFieldsToTab('Root.Verify', FieldList::create([
+            LiteralField::create('Introduction', '<p class="vry-intro"></p>'),
+            DropdownField::create('Version', 'Version', $list->toArray())
+                ->setEmptyString('-- Select One --'),
+                FormAction::create('doVerify', 'Verify')
+        ]));
     }
 
 }

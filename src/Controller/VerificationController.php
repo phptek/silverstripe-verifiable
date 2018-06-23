@@ -21,25 +21,32 @@ use SilverStripe\Versioned\Versioned;
 class VerificationController extends Controller
 {
     /**
-     * Represents a failed verification.
+     * No proof found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_FAILURE = 'FAIL';
+    const STATUS_PROOF_NONE = 'No Proof';
 
     /**
-     * Represents a passed verification.
+     * Invalid proof found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_PASSED = 'PASS';
+    const STATUS_PROOF_INVALID = 'Invalid Proof';
 
     /**
-     * Represents a pending verification.
+     * Invalid hash found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_PENDING = 'PENDING';
+    const STATUS_HASH_INVALID = 'Invalid Hash';
+
+    /**
+     * Invalid UUID. Evidence that the record has been tampered-with.
+     *
+     * @var string
+     */
+    const STATUS_UUID_INVALID = 'Invalid UUID';
 
     /**
      * @var array
@@ -49,15 +56,10 @@ class VerificationController extends Controller
     ];
 
     /**
+     * Verify the integrity of arbitrary data by means of a single hash.
+     *
      * Responds to URIs of the following prototype: /verifiable/verify/<model>/<ID>/<VID>
      * by echoing a JSON response for consumption by client-side logic.
-     *
-     * Also provides x2 extension points, both of which are passed a copy of
-     * the contents of the managed record's "Proof" {@link ChainpointProof} "Proof"
-     * field, an indirect {@link DBField} subclass.
-     *
-     * - onBeforeVerify()
-     * - onAfterVerify()
      *
      * @param  HTTPRequest $request
      * @return void
@@ -78,15 +80,10 @@ class VerificationController extends Controller
             return $this->httpError(400, 'Bad request');
         }
 
-        if (!$record->getField('Proof')) {
-            return $this->httpError(400, 'Bad request');
-        }
-
         $response = json_encode([
             'RecordID' => "$record->RecordID",
             'Version' => "$record->Version",
             'Class' => get_class($record),
-            'Submitted' => $record->dbObject('Proof')->getSubmittedAt(),
             'Status' => $this->getVerificationStatus($record),
         ], JSON_UNESCAPED_UNICODE);
 
@@ -98,32 +95,45 @@ class VerificationController extends Controller
      * account the state of the saved proof as well as by making a backend
      * verification call.
      *
+     * For the ChainPoint Backend, the following process occurs:
+     *
+     * 1. Re-hash verifiable_fields as stored within the "Proof" field
+     * 2. Assert that the record's "Proof" field is not empty
+     * 3. Assert that the record's "Proof" field contains a valid proof
+     * 4. Assert that the new hash exists in the record's "Proof" field
+     * 5. Assert that hash_node_id for that proof returns a valid response from ChainPoint
+     * 6. Assert that the returned data contains a matching hash for the new hash
+     *
      * @param  StdClass $record
      * @return string
-     * @todo What _is_ verification? That verifiable_fields data has NOT changed:
-     *  1. If no full local proof: false
-     *  2. If sending local proof to /verify fails: false, otherwise;
-     *  3. Re-calculate hash
-     *  4. Compare against local "Proof::hash()"
-     *  5. Send hash-value to /proofs to see if we get a valid proof back
-     *  6. Is Valid proof? Yes: Verified. No? Tampered-with
      */
     public function getVerificationStatus($record)
     {
-        $hashToVerify = $this->verifiableService->hash($record->normaliseData()); // <-- Could have been tampered-with
-        $hashIsVerified = $this->verifiableService->verify($hashToVerify);
-        $proof = $record->dbObject('Proof');
-        $proofIsPartial = $proof->isPartial();
-        $proofIsComplete = $proof->isComplete();
+        // Basic existence of proof (!!) check
+        if (!$proof = $record->dbObject('Proof')) {
+            return self::STATUS_PROOF_NONE;
+        }
 
-        switch (true) {
-            case $proofIsComplete && !$hashIsVerified:
-            default:
-                return self::STATUS_FAILURE;
-            case $proofIsPartial && !$hashIsVerified:
-                return self::STATUS_PENDING;
-            case $proofIsComplete && $hashIsVerified:
-                return self::STATUS_PASS;
+        // Basic proof validity check
+        if (!$proof->getHashIdNode() || !$proof->getHash() || !$proof->getSubmittedAt()) {
+            return self::STATUS_PROOF_INVALID;
+        }
+
+        // Comparison check between locally stored proof, and re-hashed record data
+        if (!$proof->match($reHash = $this->verifiableService->hash($record->normaliseData()))) {
+            return self::STATUS_HASH_INVALID;
+        }
+
+        // Remote verification check that local hash_node_id returns a valid response
+        $response = $this->verifiableService->read($proof->getHashIdNode());
+
+        if ($response === '[]') {
+            return self::STATUS_UUID_INVALID;
+        }
+
+        // Compare returned hash matches the re-hash
+        if (!$proof->match($reHash)) {
+            return self::STATUS_HASH_INVALID;
         }
     }
 

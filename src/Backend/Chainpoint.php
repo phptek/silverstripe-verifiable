@@ -21,36 +21,12 @@ use SilverStripe\Core\Injector\Injector;
  *
  * @see https://chainpoint.org
  * @see https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
+ * @todo Convert partial JSON proofs into binary format and send as POST to /verify
+ * @todo When sending verification requests, ensure the stored proof's dates match the response(s)
  */
 class Chainpoint implements BackendProvider
 {
     use Configurable;
-
-    /**
-     * Configuration of this backend's supported blockchain networks and
-     * connection details for each one's locally-installed full-node.
-     *
-     * Tieron supports Bitcoin and Ethereum, but there's nothing to stop custom
-     * routines and config appropriating an additional blockchain network to which
-     * proofs can be saved e.g. a "local" Hyperledger Fabric network.
-     *
-     * @var array
-     * @config
-     */
-    private static $blockchain_config = [
-        [
-            'name' => 'Bitcoin',
-            'implementation' => 'bitcoind',
-            'host' => '',
-            'port' => 0,
-        ],
-        [
-            'name' => 'Ethereum',
-            'implementation' => 'geth',
-            'host' => '',
-            'port' => 0,
-        ],
-    ];
 
     /**
      * @return string
@@ -69,17 +45,19 @@ class Chainpoint implements BackendProvider
     }
 
     /**
-     * Send a single hash_id_node to retrieve a proof from the backend.
+     * Send a single hash_id_node to retrieve a proof in binary format from the
+     * Tierion network.
      *
      * GETs to the: "/proofs" REST API endpoint.
      *
      * @param  string $hashIdNode
      * @return string (From GuzzleHttp\Stream::getContents()
      * @todo Rename to proofs() as per the "gateway" we're calling
+     * @todo modify to accept an array of hashes
      */
     public function getProof(string $hashIdNode) : string
     {
-        $response = $this->client("/proofs/$hashIdNode", 'GET');
+        $response = $this->client("/proofs", 'GET', ['hashids' => [$hashIdNode]]);
 
         return $response->getBody()->getContents() ?? '[]';
     }
@@ -181,10 +159,8 @@ class Chainpoint implements BackendProvider
             'allow_redirects' => false,
             'user-agent' => sprintf(
                 '%s %s',
-                \GuzzleHttp\default_user_agent(),
-                $this->getInfoFromComposer('silverstripe/framework'),
-                'phptek/verifiable'
-            ),
+                \GuzzleHttp\default_user_agent()
+            )
         ]);
 
         try {
@@ -197,32 +173,6 @@ class Chainpoint implements BackendProvider
         } catch (RequestException $e) {
             throw new VerifiableValidationException($e->getMessage());
         }
-    }
-
-    /**
-     * Return the version of $pkg taken from composer.lock.
-     *
-     * @param  string $pkg e.g. "silverstripe/framework"
-     * @return mixed null | string
-     * @todo Port to dedicated ChainpointClient class
-     */
-    protected function getInfoFromComposer(string $pkg)
-    {
-        $lockFileJSON = BASE_PATH . '/composer.lock';
-
-        if (!file_exists($lockFileJSON) || !is_readable($lockFileJSON)) {
-            return null;
-        }
-
-        $lockFileData = json_decode(file_get_contents($lockFileJSON), true);
-
-        foreach ($lockFileData['packages'] as $package) {
-            if ($package['name'] === $pkg) {
-                return $package['version'];
-            }
-        }
-
-        return null;
     }
 
     /**

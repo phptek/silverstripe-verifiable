@@ -39,6 +39,15 @@ class Trillian implements BackendProvider
      *
      * {@inheritdoc}
      */
+    public function hashFunc() : string
+    {
+        return 'sha256';
+    }
+
+    /**
+     *
+     * {@inheritdoc}
+     */
     public function connect() : bool
     {
         // TODO
