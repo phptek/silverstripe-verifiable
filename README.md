@@ -1,16 +1,22 @@
 # SilverStripe Verifiable
 
+[![Build Status](https://api.travis-ci.org/phptek/silverstripe-verifiable.svg?branch=master)](https://travis-ci.org/phptek/silverstripe-verifiable)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/phptek/silverstripe-verifiable/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phptek/silverstripe-verifiable/?branch=master)
+[![License](https://poser.pugx.org/phptek/verifiable/license.svg)](https://github.com/phptek/silverstripe-verifiable/blob/master/LICENSE.md)
+
 ## What is this?
 
-A module for SilverStripe 4 applications and websites that provides application authors and business owners the ability to verify application data. That-is; Data that may be entered by an author or user that can be verified independently, and many years after the fact.
+THIS IS A WORK IN PROGRESS
 
-Application users and software development vendor's clients have for decades taken it for granted that their application's data is safe from tampering. Clients and users simply trust that their vendors, developers and users will not behave in a manner that is counter to secure and tamper-evident data manipulation.
+A module for SilverStripe 4 applications that provides content authors and business owners the ability to verify the integrity of data over time. That-is; Data that is entered by an author or user that can be verified or audited independently, and many years after the fact.
 
-But what do we mean by "Tamper Evident"? Surely we mean "Tamper Proof"?. In an ideal world, yes, this is exactly what me might mean but we concede that there are no guarantees in this world, especially in the domain of software development. Systems that are tamper evident however will permit users who's job it is to know about these things, to know if data has been tampered with at any time. 
+Software users have for decades taken it for granted that their application's data is safe from tampering. Users simply trust that their vendors and developers will not behave in a manner that is counter to security and integrity.
+
+But what do we mean by "integrity"? Well we don't mean "Tamper Proof" becuase there is no such guarantee, ever in life and in software. However we can do "Tamper Evident". Systems that are tamper evident will permit those who's job it is, to know if data has been tampered with at any time. 
 
 ## How does it work?
 
-As part of the module's configuration, it needs to know what service should be used to "anchor" metadata in or to, such that data verification can occur. This can be done is several different ways, and this module provides 2 mechanisms or "backends" to acheive this, detailed below. 
+As part of the module's configuration, it needs to know what service should be used to "anchor" metadata in or to, such that data verification can occur. This can be done is several different ways, and this module provides 2 mechanisms or "backends" to acheive this, detailed below. Once data has been successfully anchored to the Merkle Tree store, the module will produce a valid JSON-LD [Chainpoint Proof](https://chainpoint.org/) which is stored to a pre-defined field.
 
 To provide an additional level of security, generated hashes can also be digitally signed by users.
 
@@ -26,13 +32,11 @@ We make use of REST calls to the [Tieron](https://tieron.com/) blockchain networ
 
 ## Install
 
-    #> composer install phptel/verifiable
+    #> composer install phptek/verifiable
 
 ## Configuration
 
-Optionally install the  
-
-TODO
+Optionally install the [JSONText](https://github.com/phptek/silverstripe-jsontext) module to provide a JSON query API to all your stored [Chainpoint Proof](https://chainpoint.org/) documents.
 
 
 
