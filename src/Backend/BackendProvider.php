@@ -12,6 +12,7 @@ namespace PhpTek\Verifiable\Backend;
  */
 interface BackendProvider
 {
+
     /**
      * The name of this backend.
      *

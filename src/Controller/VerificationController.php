@@ -22,6 +22,7 @@ use SilverStripe\ORM\ValidationException;
  *
  * @todo Take into account LastEdited and Created dates, outside of userland control
  * of verifiable_fields
+ * @todo Rename to "VerifiableController"
  */
 class VerificationController extends Controller
 {
@@ -30,14 +31,14 @@ class VerificationController extends Controller
      *
      * @var string
      */
-    const STATUS_PROOF_NONE = 'No Proof';
+    const STATUS_PROOF_NONE = 'No Proof Found';
 
     /**
      * Invalid proof found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_PROOF_INVALID = 'Invalid Proof';
+    const STATUS_PROOF_INVALID = 'Invalid Proof Found';
 
     /**
      * Invalid local hash found. Evidence that the record has been tampered-with.
@@ -47,11 +48,11 @@ class VerificationController extends Controller
     const STATUS_HASH_LOCAL_INVALID = 'Local Hash Invalid';
 
     /**
-     * Invalid remote hash found. Evidence that the record has been tampered-with.
+     * Invalid or no remote proof found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_HASH_REMOTE_INVALID_NO_DATA = 'Remote Hash No Data';
+    const STATUS_HASH_REMOTE_INVALID_NO_DATA = 'Remote Hash Not Found';
 
     /**
      * Invalid remote hash found. Evidence that the record has been tampered-with.
@@ -128,7 +129,7 @@ class VerificationController extends Controller
         }
 
         try {
-            $status = $this->getVerificationStatus($record);
+            $status = $this->getVerificationStatus($record, $record->getExtraByIndex());
         } catch (ValidationException $ex) {
             $status = self::STATUS_UPSTREAM_ERROR;
         }
@@ -138,6 +139,8 @@ class VerificationController extends Controller
             'Version' => "$record->Version",
             'Class' => get_class($record),
             'Status' => $status,
+            'SubmittedAt' => $record->dbObject('Proof')->getSubmittedAt(),
+            'SubmittedTo' => $record->dbObject('Extra')->getStoreAsArray(),
         ], JSON_UNESCAPED_UNICODE);
 
         $this->renderJSON($response);
@@ -158,11 +161,16 @@ class VerificationController extends Controller
      * 6. Assert that the returned data contains a matching hash for the new hash
      *
      * @param  DataObject $record
+     * @param  array      $nodes
      * @return string
      * @todo Add tests
      */
-    public function getVerificationStatus($record)
+    public function getVerificationStatus($record, $nodes)
     {
+        // Set some extra data on the service. In this case, the actual chainpoint
+        // node addresses, used to submit hashes for the given $record
+        $this->verifiableService->setNodes($nodes);
+
         // Basic existence of proof (!!) check
         if (!$proof = $record->dbObject('Proof')) {
             return self::STATUS_PROOF_NONE;
@@ -188,8 +196,7 @@ class VerificationController extends Controller
             return self::STATUS_UUID_INVALID;
         }
 
-        $responseBinaryProof = ChainpointProof::create()->setValue($responseBinary);
-        $responseVerify = $this->verifiableService->verify($responseBinaryProof);
+        $responseVerify = $this->verifiableService->verify($responseBinary);
 
         if ($responseVerify === '[]') {
             return self::STATUS_HASH_REMOTE_INVALID_NO_DATA;

@@ -20,13 +20,16 @@ use SilverStripe\Core\Injector\Injector;
  *
  * @see https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
  * @see https://chainpoint.org
+ * @todo in setDiscoveredNodes()) Instead of throwing an exception, re-call setDiscoveredNodes()
+ * which will randomly discover a new URL to use.
+ * @todo To help with the above, ensure that the array of returned IPs is sorted randomly.
  */
 class Chainpoint implements BackendProvider
 {
     use Configurable;
 
     /**
-     * An array of chainpoint nodes for submitting hashes to.
+     * An array of nodes for submitting hashes to.
      *
      * @var array
      */
@@ -137,19 +140,19 @@ class Chainpoint implements BackendProvider
      * @param  string   $url     The absolute or relative URL to make a request to.
      * @param  string   $verb    The HTTP verb to use e.g. GET or POST.
      * @param  array    $payload The payload to be sent along in GET/POST requests.
-     * @param  bool     $rel     Is the passed $url relative or not. If it is, pass "base_uri" to {@link Client}.
-     * @return Response Guzzle Response object
+     * @param  bool     $rel     Is $url relative? If so, pass "base_uri" to {@link Client}.
+     * @return Response Guzzle   Response object
      * @throws VerifiableBackendException
      * @todo Use promises to send concurrent requests: 1). Find a node 2). Pass node URL to second request
-     * @todo Save the node IP somewhere and ensure that's used in subsequent controller actions
+     * @todo Can the "base_uri" Guzzle\Client option accept an array?
      */
     protected function client(string $url, string $verb, array $payload = [], bool $rel = true)
     {
         if ($rel && !$this->getDiscoveredNodes()) {
             $this->setDiscoveredNodes();
 
-            // This should _never_ happen..
             if (!$this->getDiscoveredNodes()) {
+                // This should _never_ happen..
                 throw new VerifiableValidationException('No chainpoint nodes discovered!');
             }
         }
@@ -179,23 +182,28 @@ class Chainpoint implements BackendProvider
 
     /**
      * The Tierion network comprises many nodes, some of which may or may not be
-     * online. Pings a randomly selected resource URL, who's response should contain
-     * IPs of each advertised and audited node, then calls each one until one responds
-     * with an HTTP 200 and returns it.
+     * online. We therefore randomly select a source of curated (audited) node-IPs
+     * and for each IP, we ping it until we receive a 200 OK response. For each such
+     * node, it is then set to $discovered_nodes.
      *
-     * @return void
+     * @param  array $usedNodes  Optionally pass some "pre-known" chainpoint nodes
+     * @return mixed void | null
      * @throws VerifiableBackendException
-     * @todo Set the URL as a class-property and re-use that, rather than re-calling discoverNode()
-     * @todo Make this method re-entrant and try a different URL
+     * @todo Handle exceptions from GuzzleHTTP\Client (e.g. timeout errors from curl).
      */
-    public function setDiscoveredNodes()
+    public function setDiscoveredNodes($usedNodes = null)
     {
-        $limit = $this->config()->discover_node_count ?: 1;
+        if ($usedNodes) {
+            static::$discovered_nodes = $usedNodes;
+
+            return;
+        }
+
+        $limit = (int) $this->config()->get('discover_node_count') ?: 1;
         $chainpointUrls = $this->config()->get('chainpoint_urls');
         $url = $chainpointUrls[rand(0,2)];
         $response = $this->client($url, 'GET', [], false);
 
-        // TODO: Instead of throwing exception, re-call discoverNodes() and try a new URL
         if ($response->getStatusCode() !== 200) {
             throw new VerifiableBackendException('Bad response from node source URL');
         }
@@ -213,7 +221,7 @@ class Chainpoint implements BackendProvider
 
             static::$discovered_nodes[] = $candidate['public_uri'];
 
-            if ($i == $limit) {
+            if ($i === $limit) {
                 break;
             }
         }

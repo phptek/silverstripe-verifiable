@@ -19,6 +19,7 @@ use PhpTek\Verifiable\Backend\BackendProvider;
  * currently selected Merkle Tree storage backend.
  *
  * @todo Handle rate-limiting by the Chainpoint network and by repeated access to this controller
+ * @todo Write a __call() method that sets nodes to the backend once, rather than in each backend method call
  * @see https://github.com/chainpoint/chainpoint-node/wiki/Chainpoint-Node-API:-How-to-Create-a-Chainpoint-Proof
  */
 class VerifiableService
@@ -30,6 +31,13 @@ class VerifiableService
      * @var BackendProvider
      */
     protected $backend;
+
+    /**
+     *
+     * @var array
+     * @todo TIGHT COUPLING
+     */
+    protected $nodes = [];
 
     /**
      * @return void
@@ -49,6 +57,9 @@ class VerifiableService
      */
     public function write(array $data)
     {
+        // TODO: Is there a better way of doing this?
+        $this->backend->setDiscoveredNodes($this->getNodes());
+
         return $this->backend->writeHash([$this->hash($data)]);
     }
 
@@ -60,6 +71,9 @@ class VerifiableService
      */
     public function read(string $hashIdNode) : string
     {
+        // TODO: Is there a better way of doing this?
+        $this->backend->setDiscoveredNodes($this->getNodes());
+
         return $this->backend->getProof($hashIdNode);
     }
 
@@ -71,11 +85,31 @@ class VerifiableService
      */
     public function verify(string $proof)
     {
+        // TODO: Is there a better way of doing this?
+        $this->backend->setDiscoveredNodes($this->getNodes());
+
         return $this->backend->verifyProof($proof);
     }
 
     /**
-     * Set, instantiate and return a new Merkle Tree storage backend.
+     *
+     */
+    public function setNodes(array $nodes)
+    {
+        $this->nodes = $nodes;
+    }
+
+    /**
+     * @return array
+     * @todo TIGHT COUPLING
+     */
+    public function getNodes()
+    {
+        return $this->nodes;
+    }
+
+    /**
+     * Set, configure and return a new Merkle Tree storage backend.
      *
      * @param  BackendProvider   $provider Optional manually passed backend.
      * @return VerifiableService

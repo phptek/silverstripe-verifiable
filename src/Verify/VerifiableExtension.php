@@ -27,6 +27,11 @@ use PhpTek\JSONText\ORM\FieldType\JSONText;
  * @todo Hard-code "Created" and "LastEdited" fields into "verifiable_fields"
  * @todo Prevent "Proof" field from ever being configured in verifiable_fields
  * @todo Use AsyncPHP to make the initial write call to the backend, wait ~15s and then request a proof in return
+ * @todo Use crontask module to periodically query backends for a full proof
+ * @todo WARNING: Tight coupling between: Extension <=> Service <=> Backend (Node "Discovery" is chainpoint-specific)
+ * @todo Rename x2 fields and prefix with 'v' ??
+ * @todo Save only the IP octets, no need to save "http(s)?" in the "Extra" field
+ * @todo Avoid node-discovery in anywhere _other_ than the CMS / admin UI
  */
 class VerifiableExtension extends DataExtension
 {
@@ -38,6 +43,7 @@ class VerifiableExtension extends DataExtension
      */
     private static $db = [
         'Proof' => ChainpointProof::class,
+        'Extra' => JSONText::class,
     ];
 
     /**
@@ -60,6 +66,9 @@ class VerifiableExtension extends DataExtension
 
         $verifiable = $this->normaliseData();
         $owner = $this->getOwner();
+        // TODO Tight coupling
+        $nodes = $owner->dbObject('Extra')->getStoreAsArray();
+        $this->verifiableService->setNodes($nodes);
 
         if (count($verifiable) && $proofData = $this->verifiableService->write($verifiable)) {
             if (is_array($proofData)) {
@@ -67,7 +76,7 @@ class VerifiableExtension extends DataExtension
             }
 
             $owner->setField('Proof', $proofData);
-           // $owner->setField('NodeIPs', json_encode($this->verifiableService->getBackend()->getDiscoveredNodes()));
+            $owner->setField('Extra', json_encode($nodes));
         }
     }
 
@@ -104,6 +113,7 @@ class VerifiableExtension extends DataExtension
         $owner = $this->getOwner();
         $list = [];
         $versions = $owner->Versions()->sort('Version');
+        $keyTable = file_get_contents(realpath(__DIR__) . '/../../doc/statuses.html');
 
         foreach ($versions as $item) {
             $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->Created);
@@ -118,18 +128,30 @@ class VerifiableExtension extends DataExtension
             DropdownField::create('Version', 'Version', $list)
                 ->setEmptyString('-- Select One --'),
                 FormAction::create('doVerify', 'Verify'),
-            ToggleCompositeField::create('KeyTable', 'Status Key', LiteralField::create('Foo', $this->keyTable())),
+            ToggleCompositeField::create('KeyTable', 'Status Key', LiteralField::create('Foo', $keyTable)),
         ]));
     }
 
     /**
-     * Generate an HTML table comprising status definitions.
+     * Get the contents of this model's "Extra" field by numeric index.
      *
-     * @return string
+     * @param  int $num
+     * @return mixed array | int
      */
-    public function keyTable()
+    public function getExtraByIndex(int $num = null)
     {
-        return file_get_contents(realpath(__DIR__) . '/../../doc/statuses.html');
+        $extra = $this->getOwner()->dbObject('Extra');
+        $extra->setReturnType('array');
+
+        if (!$num) {
+            return $extra->getStoreAsArray();
+        }
+
+        if (!empty($value = $extra->nth($num))) {
+            return is_array($value) ? $value[0] : $value; // <-- stuuupId. Needs fixing in JSONText
+        }
+
+        return [];
     }
 
 }
