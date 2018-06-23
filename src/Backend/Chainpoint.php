@@ -78,9 +78,7 @@ class Chainpoint implements BackendProvider
     }
 
     /**
-     * Send an array of hashes for anchoring. Initial responses look like the following:
-     *
-     *  {"meta":{"submitted_at":"2018-06-09T00:27:03Z","processing_hints":{"cal":"2018-06-09T00:27:18Z","btc":"2018-06-09T01:28:03Z"}},"hashes":[{"hash_id_node":"d5558060-6b7b-11e8-a2e4-01345eeea48d","hash":"31bddc977afa06935e3568331264f4efcf720a62"}]}
+     * Send an array of hashes for anchoring.
      *
      * @param  array $hashes
      * @return string
@@ -110,7 +108,7 @@ class Chainpoint implements BackendProvider
 
         $response = $this->client('/verify', 'POST', ['proofs' => [$proof]]);
 
-        if ($response === '[]') {
+        if ($response->getBody()->getContents() === '[]') {
             return false;
         }
 
@@ -194,15 +192,15 @@ class Chainpoint implements BackendProvider
      * Return the version of $pkg taken from composer.lock.
      *
      * @param  string $pkg e.g. "silverstripe/framework"
-     * @return string
+     * @return mixed null | string
      * @todo Port to dedicated ChainpointClient class
      */
-    protected function getInfoFromComposer($pkg)
+    protected function getInfoFromComposer(string $pkg)
     {
         $lockFileJSON = BASE_PATH . '/composer.lock';
 
         if (!file_exists($lockFileJSON) || !is_readable($lockFileJSON)) {
-            return self::SLW_NOOP;
+            return null;
         }
 
         $lockFileData = json_decode(file_get_contents($lockFileJSON), true);
@@ -213,7 +211,7 @@ class Chainpoint implements BackendProvider
             }
         }
 
-        return self::SLW_NOOP;
+        return null;
     }
 
     /**
@@ -224,6 +222,8 @@ class Chainpoint implements BackendProvider
      *
      * @return string
      * @throws VerifiableBackendException
+     * @todo Set the URL as a class-property and re-use that, rather than re-calling fetchNodeUrl()
+     * @todo Make this method re-entrant and try a different URL
      */
     protected function fetchNodeUrl()
     {
@@ -231,8 +231,6 @@ class Chainpoint implements BackendProvider
         $url = $chainpointUrls[rand(0,2)];
         $response = $this->client($url, 'GET', [], false);
 
-        // TODO Set the URL as a class-property and re-use that, rather than re-calling fetchNodeUrl()
-        // TODO Make this method re-entrant and try a different URL
         if ($response->getStatusCode() !== 200) {
             throw new VerifiableBackendException('Bad response from node source URL');
         }
@@ -240,7 +238,7 @@ class Chainpoint implements BackendProvider
         foreach (json_decode($response->getBody(), true) as $candidate) {
             $response = $this->client($candidate['public_uri'], 'GET', [], false);
 
-            // If for some reason we don't get a response: re-entrant method
+            // If for some reason we don't get a response: Do re-entrant method
             if ($response->getStatusCode() === 200) {
                 return $candidate['public_uri'];
             }
