@@ -27,39 +27,39 @@ use SilverStripe\ORM\ValidationException;
 class VerificationController extends Controller
 {
     /**
-     * No proof found. Evidence that the record has been tampered-with.
+     * No local proof found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_PROOF_NONE = 'No Proof Found';
+    const STATUS_LOCAL_PROOF_NONE = 'Local Proof Not Found';
 
     /**
-     * Invalid proof found. Evidence that the record has been tampered-with.
+     * Invalid local proof found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_PROOF_INVALID = 'Invalid Proof Found';
+    const STATUS_LOCAL_PROOF_INVALID = 'Local Proof Invalid';
 
     /**
      * Invalid local hash found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_HASH_LOCAL_INVALID = 'Local Hash Invalid';
+    const STATUS_LOCAL_HASH_INVALID = 'Local Hash Invalid';
 
     /**
-     * Invalid or no remote proof found. Evidence that the record has been tampered-with.
+     * Invalid or no matching remote proof found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_HASH_REMOTE_INVALID_NO_DATA = 'Remote Hash Not Found';
+    const STATUS_REMOTE_HASH_INVALID_NO_DATA = 'Remote Hash Not Found';
 
     /**
      * Invalid remote hash found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_HASH_REMOTE_INVALID_NO_HASH = 'Remote Hash Not Found';
+    const STATUS_REMOTE_HASH_INVALID_NO_HASH = 'Remote Hash Not Found';
 
     /**
      * Invalid UUID. Evidence that the record has been tampered-with.
@@ -173,19 +173,19 @@ class VerificationController extends Controller
 
         // Basic existence of proof (!!) check
         if (!$proof = $record->dbObject('Proof')) {
-            return self::STATUS_PROOF_NONE;
+            return self::STATUS_LOCAL_PROOF_NONE;
         }
 
         // Basic proof validity check
         // @todo Beef this up to ensure that a basic regex is run over each to ensure it's all
         // not just gobbledygook
         if (!$proof->getHashIdNode() || !$proof->getHash() || !$proof->getSubmittedAt()) {
-            return self::STATUS_PROOF_INVALID;
+            return self::STATUS_LOCAL_PROOF_INVALID;
         }
 
         // Comparison check between locally stored proof, and re-hashed record data
         if ($proof->getHash() !== $foo = $this->verifiableService->hash($record->normaliseData())) {
-            return self::STATUS_HASH_LOCAL_INVALID;
+            return self::STATUS_LOCAL_HASH_INVALID;
         }
 
         // Remote verification check that local hash_node_id returns a valid response
@@ -199,14 +199,14 @@ class VerificationController extends Controller
         $responseVerify = $this->verifiableService->verify($responseBinary);
 
         if ($responseVerify === '[]') {
-            return self::STATUS_HASH_REMOTE_INVALID_NO_DATA;
+            return self::STATUS_REMOTE_HASH_INVALID_NO_DATA;
         }
 
         // Compare returned hash matches the re-hash
         $responseProof = ChainpointProof::create()->setValue($responseVerify);
 
         if (!$responseProof->match($reHash)) {
-            return self::STATUS_HASH_REMOTE_INVALID_NO_HASH;
+            return self::STATUS_REMOTE_HASH_NO_HASH;
         }
 
         if ($responseProof->getStatus() === 'verified') {
