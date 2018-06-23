@@ -1,0 +1,25 @@
+Handle rate-limiting by the Chainpoint network
+Write a __call() method that sets nodes to the backend once, rather than in each backend method call
+Fix the tight-cpupling that exists between Extension --> Service --> Chainpoint backend
+Hard-code "Created" and "LastEdited" fields into "verifiable_fields"
+Prevent "Proof" field from ever being configured in verifiable_fields
+Use AsyncPHP to make the initial write call to the backend, wait ~15s and then request a proof in return
+Use silverstripe/crontask module to periodically query backends for a full proof
+Rename x2 DB fields declared in VerifiableExtension and prefix with 'v' or 'verifiable'
+Save only the IP octets, no need to save "http(s)?" in the "Extra" field
+Write basic CMS JS that couples VerifiableController with VerifiableExtension::updateCMSFields()
+Implement a basic Trillian backend
+In setDiscoveredNodes() instead of throwing an exception, re-call setDiscoveredNodes()
+./src/Backend/Chainpoint.php:     * @todo Rename to proofs() as per the "gateway" we're calling
+./src/Backend/Chainpoint.php:     * @todo modify to accept an array of hashes
+./src/Backend/Chainpoint.php:     * @todo Rename to hashes() as per the "gateway" we're calling
+./src/Backend/Chainpoint.php:     * @todo See the returned proof's "uris" key, to be able to call a specific URI for proof verification.
+./src/Backend/Chainpoint.php:     * @todo Use promises to send concurrent requests: 1). Find a node 2). Pass node URL to second request
+There are at least 3 submission requests for anchoring, but verification only pings one of these. Can the "base_uri" Guzzle\Client option accept an array of addresses/IPs?
+Handle exceptions from GuzzleHTTP\Client (e.g. timeout errors from curl) in Chainpoint::client()
+Add support for exporting in MsgPack format (http://msgpack.org/index.html)
+Rename "VerificationController" to "VerifiableController"
+Add tests esp mocking Chainpoint responses
+./src/Controller/VerificationController.php:        // @todo Beef this up to ensure that a basic regex is run over each to ensure it's all
+Add support for digital notarisation of arbitrary frontend form submissions and uploaded documents
+Update README with interesting URLs on verifiable claims etc

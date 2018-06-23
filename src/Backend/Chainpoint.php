@@ -199,6 +199,10 @@ class Chainpoint implements BackendProvider
             return;
         }
 
+        if (count(static::$discovered_nodes)) {
+            return;
+        }
+
         $limit = (int) $this->config()->get('discover_node_count') ?: 1;
         $chainpointUrls = $this->config()->get('chainpoint_urls');
         $url = $chainpointUrls[rand(0,2)];

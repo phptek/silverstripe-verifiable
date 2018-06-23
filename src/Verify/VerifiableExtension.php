@@ -66,9 +66,7 @@ class VerifiableExtension extends DataExtension
 
         $verifiable = $this->normaliseData();
         $owner = $this->getOwner();
-        // TODO Tight coupling
-        $nodes = $owner->dbObject('Extra')->getStoreAsArray();
-        $this->verifiableService->setNodes($nodes);
+        $this->verifiableService->setExtra();
 
         if (count($verifiable) && $proofData = $this->verifiableService->write($verifiable)) {
             if (is_array($proofData)) {
@@ -76,7 +74,7 @@ class VerifiableExtension extends DataExtension
             }
 
             $owner->setField('Proof', $proofData);
-            $owner->setField('Extra', json_encode($nodes));
+            $owner->setField('Extra', json_encode($this->verifiableService->getExtra()));
         }
     }
 

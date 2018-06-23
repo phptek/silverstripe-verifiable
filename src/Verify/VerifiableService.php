@@ -35,9 +35,8 @@ class VerifiableService
     /**
      *
      * @var array
-     * @todo TIGHT COUPLING
      */
-    protected $nodes = [];
+    protected $extra = [];
 
     /**
      * @return void
@@ -58,23 +57,23 @@ class VerifiableService
     public function write(array $data)
     {
         // TODO: Is there a better way of doing this?
-        $this->backend->setDiscoveredNodes($this->getNodes());
+        $this->backend->setDiscoveredNodes($this->getExtra());
 
         return $this->backend->writeHash([$this->hash($data)]);
     }
 
     /**
-     * Fetch a chainpoint proof for the passed $hashIdNode.
+     * Fetch a chainpoint proof for the passed $uuid.
      *
-     * @param  string $hashIdNode
+     * @param  string $uuid
      * @return string The JSON-LD chainpoint proof.
      */
-    public function read(string $hashIdNode) : string
+    public function read(string $uuid) : string
     {
         // TODO: Is there a better way of doing this?
-        $this->backend->setDiscoveredNodes($this->getNodes());
+        $this->backend->setDiscoveredNodes($this->getExtra());
 
-        return $this->backend->getProof($hashIdNode);
+        return $this->backend->getProof($uuid);
     }
 
     /**
@@ -86,26 +85,33 @@ class VerifiableService
     public function verify(string $proof)
     {
         // TODO: Is there a better way of doing this?
-        $this->backend->setDiscoveredNodes($this->getNodes());
+        $this->backend->setDiscoveredNodes($this->getExtra());
 
         return $this->backend->verifyProof($proof);
     }
 
     /**
-     *
+     * @param  array $extra
+     * @return VerifiableService
      */
-    public function setNodes(array $nodes)
+    public function setExtra(array $extra = [])
     {
-        $this->nodes = $nodes;
+        if (!$extra) {
+            $this->backend->setDiscoveredNodes();
+            $this->extra = $this->backend->getDiscoveredNodes();
+        } else {
+            $this->extra = $extra;
+        }
+
+        return $this;
     }
 
     /**
      * @return array
-     * @todo TIGHT COUPLING
      */
-    public function getNodes()
+    public function getExtra()
     {
-        return $this->nodes;
+        return $this->extra;
     }
 
     /**

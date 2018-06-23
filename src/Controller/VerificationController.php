@@ -169,7 +169,7 @@ class VerificationController extends Controller
     {
         // Set some extra data on the service. In this case, the actual chainpoint
         // node addresses, used to submit hashes for the given $record
-        $this->verifiableService->setNodes($nodes);
+        $this->verifiableService->setExtra($nodes);
 
         // Basic existence of proof (!!) check
         if (!$proof = $record->dbObject('Proof')) {
@@ -184,7 +184,7 @@ class VerificationController extends Controller
         }
 
         // Comparison check between locally stored proof, and re-hashed record data
-        if ($proof->getHash() !== $foo = $this->verifiableService->hash($record->normaliseData())) {
+        if ($proof->getHash() !== $reHash = $this->verifiableService->hash($record->normaliseData())) {
             return self::STATUS_LOCAL_HASH_INVALID;
         }
 
@@ -196,7 +196,11 @@ class VerificationController extends Controller
             return self::STATUS_UUID_INVALID;
         }
 
-        $responseVerify = $this->verifiableService->verify($responseBinary);
+        // Extract the "proof" component of the "binary" response to send for verification
+        $responseBinaryProof = ChainpointProof::create()
+                ->setValue($responseBinary)
+                ->getProof();
+        $responseVerify = $this->verifiableService->verify($responseBinaryProof);
 
         if ($responseVerify === '[]') {
             return self::STATUS_REMOTE_HASH_INVALID_NO_DATA;
