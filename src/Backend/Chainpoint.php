@@ -134,25 +134,22 @@ class Chainpoint implements BackendProvider
     /**
      * Return a client to use for all RPC traffic to this backend.
      *
-     * @param  string   $url
-     * @param  string   $verb
-     * @param  array    $payload
-     * @param  bool     $simple  Pass "base_uri" to {@link Client}.
+     * @param  string   $url     The absolute or relative URL to make a request to.
+     * @param  string   $verb    The HTTP verb to use e.g. GET or POST.
+     * @param  array    $payload The payload to be sent along in GET/POST requests.
+     * @param  bool     $rel     Is the passed $url relative or not. If it is, pass "base_uri" to {@link Client}.
      * @return Response Guzzle Response object
      * @throws VerifiableBackendException
-     * @todo Client()->setSslVerification() if required
      * @todo Use promises to send concurrent requests: 1). Find a node 2). Pass node URL to second request
-     * @todo Use 'body' in POST requests?
-     * @todo Port to dedicated ChainpointClient class
-     * @todo Use multiple
+     * @todo Save the node IP somewhere and ensure that's used in subsequent controller actions
      */
-    protected function client(string $url, string $verb, array $payload = [], bool $simple = true)
+    protected function client(string $url, string $verb, array $payload = [], bool $rel = true)
     {
-        if ($simple && !static::$discovered_nodes) {
-            $this->discoverNodes();
+        if ($rel && !$this->getDiscoveredNodes()) {
+            $this->setDiscoveredNodes();
 
             // This should _never_ happen..
-            if (!static::$discovered_nodes) {
+            if (!$this->getDiscoveredNodes()) {
                 throw new VerifiableValidationException('No chainpoint nodes discovered!');
             }
         }
@@ -161,7 +158,7 @@ class Chainpoint implements BackendProvider
         $method = strtolower($verb);
         $config = $this->config()->get('client_config');
         $client = new Client([
-            'base_uri' => $simple ? static::$discovered_nodes[0] : '',
+            'base_uri' => $rel ? $this->getDiscoveredNodes()[0] : '',
             'verify' => true,
             'timeout'  => $config['timeout'],
             'connect_timeout'  => $config['connect_timeout'],
@@ -186,14 +183,14 @@ class Chainpoint implements BackendProvider
      * IPs of each advertised and audited node, then calls each one until one responds
      * with an HTTP 200 and returns it.
      *
-     * @param  int  $limit The number of nodes to send hashes to
      * @return void
      * @throws VerifiableBackendException
      * @todo Set the URL as a class-property and re-use that, rather than re-calling discoverNode()
      * @todo Make this method re-entrant and try a different URL
      */
-    public function discoverNodes(int $limit = 3)
+    public function setDiscoveredNodes()
     {
+        $limit = $this->config()->discover_node_count ?: 1;
         $chainpointUrls = $this->config()->get('chainpoint_urls');
         $url = $chainpointUrls[rand(0,2)];
         $response = $this->client($url, 'GET', [], false);
@@ -212,7 +209,7 @@ class Chainpoint implements BackendProvider
                 continue;
             }
 
-            ++$i; // Only increment on succesful requests
+            ++$i; // Only increment with succesful requests
 
             static::$discovered_nodes[] = $candidate['public_uri'];
 
@@ -220,6 +217,14 @@ class Chainpoint implements BackendProvider
                 break;
             }
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getDiscoveredNodes()
+    {
+        return static::$discovered_nodes;
     }
 
 }

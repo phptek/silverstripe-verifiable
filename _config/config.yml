@@ -9,8 +9,4 @@ PhpTek\Verifiable\Verify\VerifiableExtension:
 PhpTek\Verifiable\Controller\VerificationController:
   dependencies:
     verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
-
-PhpTek\Verifiable\Verify\VerifiableService:
-  # One of: "trillian" or "chainpoint"
-  backend: chainpoint
     

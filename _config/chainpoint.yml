@@ -12,3 +12,7 @@ PhpTek\Verifiable\Backend\Chainpoint:
     - https://c.chainpoint.org/nodes/random/
   # Verify directly via local Bitcoind & Geth nodes?
   direct_verification: false
+  # How many nodes do we send hashes to?
+  # Note: The higher this is, the more HTTP requests need to be made to the
+  # Tierion network when saving/publishing content.
+  discover_node_count: 3

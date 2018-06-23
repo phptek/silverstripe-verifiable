@@ -12,10 +12,7 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\ClassInfo;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
-use PhpTek\Verifiable\Job\BackendVerificationJob;
-use Symbiote\QueuedJobs\Services\QueuedJobService;
 use PhpTek\Verifiable\Backend\BackendProvider;
-use SilverStripe\ORM\DataObject;
 
 /**
  * Service class that works as an intermediary between any data model and the
@@ -80,7 +77,7 @@ class VerifiableService
     /**
      * Set, instantiate and return a new Merkle Tree storage backend.
      *
-     * @param  BackendProvider $provider Optional manually pased backend.
+     * @param  BackendProvider   $provider Optional manually passed backend.
      * @return VerifiableService
      * @throws VerifiableBackendException
      */
@@ -103,7 +100,7 @@ class VerifiableService
             }
         }
 
-        // Cannt continue without a legit backend
+        // Cannot continue without a legit backend
         throw new VerifiableBackendException('No backend found');
     }
 
@@ -118,14 +115,13 @@ class VerifiableService
     /**
      * Hashes the data passed into the $hash param.
      *
-     * @param  array $data An array of data who's values should be hashed.
-     * @return string      The resulting hashed data.
-     * @todo               Take user input in the form of a digital signature
+     * @param  array  $data An array of data who's values should be hashed.
+     * @return string       The resulting hashed data.
      */
     public function hash(array $data) : string
     {
         $func = $this->backend->hashFunc();
-        $text = json_encode($data); // Simply used to stringify arrays of arbitary depth
+        $text = json_encode($data); // json_encode() to stringify arrays of arbitary depth
 
         return hash($func, $text);
     }

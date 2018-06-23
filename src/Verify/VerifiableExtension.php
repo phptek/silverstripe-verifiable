@@ -14,6 +14,7 @@ use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\ToggleCompositeField;
+use PhpTek\JSONText\ORM\FieldType\JSONText;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass and declaring a
@@ -51,17 +52,6 @@ class VerifiableExtension extends DataExtension
      * Before each write, data from the $verifiable_fields config is compiled
      * into a string, hashed and submitted to the current backend.
      *
-     * Once written, we periodically poll the backend to receive the full
-     * chainpoint proof (it takes time for Bitcoin's PoW confirmations, not so
-     * much for Ethereum).
-     *
-     * We need this "complete" proof for subsequent verification checks
-     * also made against the same backend in the future.
-     *
-     * If only the "Proof" field has been written-to, or no-data is found in the
-     * verifiable_fields, this should not constitute a write that we need to do
-     * anything with, and it's therefore skipped.
-     *
      * @return void
      */
     public function onBeforeWrite()
@@ -69,13 +59,15 @@ class VerifiableExtension extends DataExtension
         parent::onBeforeWrite();
 
         $verifiable = $this->normaliseData();
+        $owner = $this->getOwner();
 
         if (count($verifiable) && $proofData = $this->verifiableService->write($verifiable)) {
             if (is_array($proofData)) {
                 $proofData = json_encode($proofData);
             }
 
-            $this->getOwner()->setField('Proof', $proofData);
+            $owner->setField('Proof', $proofData);
+           // $owner->setField('NodeIPs', json_encode($this->verifiableService->getBackend()->getDiscoveredNodes()));
         }
     }
 
@@ -120,8 +112,9 @@ class VerifiableExtension extends DataExtension
         $fields->addFieldsToTab('Root.Verify', FieldList::create([
             LiteralField::create('Introduction', '<p class="message">Select a version'
                     . ' whose data you wish to verify, then select the "Verify"'
-                    . ' button. A verification status will be displayed.'
-                    . ' Please refer to the "Status Key" table below.</p>'),
+                    . ' button. After a few seconds, a verification status will be'
+                    . ' displayed. Please refer to the "Status Key" table below to'
+                    . ' interpret the result.</p>'),
             DropdownField::create('Version', 'Version', $list)
                 ->setEmptyString('-- Select One --'),
                 FormAction::create('doVerify', 'Verify'),
@@ -136,7 +129,7 @@ class VerifiableExtension extends DataExtension
      */
     public function keyTable()
     {
-        return file_get_contents(realpath(__DIR__) . '/../../doc/statuses.txt');
+        return file_get_contents(realpath(__DIR__) . '/../../doc/statuses.html');
     }
 
 }
