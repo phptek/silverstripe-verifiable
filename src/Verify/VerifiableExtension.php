@@ -44,7 +44,11 @@ class VerifiableExtension extends DataExtension
 
     /**
      * After each write, the desired field's data is compiled into a string
-     * and submitted to the currently configured backend.
+     * and submitted as a hash to the currently configured backend.
+     *
+     * Once written, we poll the backend to receive the chainpoint proof
+     * which we'll need for subsequent verification checks made against the
+     * backend.
      *
      * @return void
      */

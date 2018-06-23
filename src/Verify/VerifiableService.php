@@ -69,7 +69,7 @@ class VerifiableService
     }
 
     /**
-     * Verify the given proof against the backend.
+     * Verify the given JSON-LD chainpoint proof against the backend.
      *
      * @param  string $proof A JSON-LD chainpoint proof.
      * @return bool
@@ -100,7 +100,7 @@ class VerifiableService
         foreach ($backends as $backend) {
             if (singleton($backend)->name() === $namedBackend) {
                 $this->backend = Injector::inst()->create($backend);
-                
+
                 return $this;
             }
         }

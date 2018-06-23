@@ -13,6 +13,7 @@ use Guzzle\Http\Exception\RequestException;
 use Guzzle\Http\Message\Request;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
+use SilverStripe\Core\Injector\Injector;
 
 /**
  * See: https://chainpoint.org
@@ -20,6 +21,32 @@ use PhpTek\Verifiable\Exception\VerifiableBackendException;
 class Chainpoint implements BackendProvider
 {
     use Configurable;
+
+    /**
+     * Configuration of this backend's supported blockchain networks and
+     * connection details for each one's locally-installed full-node.
+     *
+     * Tieron supports Bitcoin and Ethereum, but there's nothing to stop custom
+     * routines and config appropriating an additional blockxhain network to which
+     * proofs can be saved e.g. a local Hyperledger Fabric network.
+     *
+     * @var array
+     * @config
+     */
+    private static $blockchain_config = [
+        [
+            'name' => 'Bitcoin',
+            'implementation' => 'bitcoind',
+            'host' => '',
+            'port' => 0,
+        ],
+        [
+            'name' => 'Ethereum',
+            'implementation' => 'geth',
+            'host' => '',
+            'port' => 0,
+        ],
+    ];
 
     /**
      * @return string
@@ -64,6 +91,12 @@ class Chainpoint implements BackendProvider
      */
     public function verifyProof(string $proof) : bool
     {
+        // Consult blockchains directly, if so configured and suitable
+        // blockchain full-nodes are available to our RPC connections
+        if ((bool) $this->config()->get('direct_verification') === true) {
+            return $this->backend->verifyDirect($proof);
+        }
+
         $response = $this->client('/verify', 'POST', json_encode(['proofs' => [$hash]]));
 
         return $response->getStatusCode() === 200 &&
@@ -120,6 +153,33 @@ class Chainpoint implements BackendProvider
                 return $candidate['public_uri'];
             }
         }
+    }
+
+    /**
+     * For each of this backend's supported blockchain networks, skips any intermediate
+     * verification steps through the Tieron network, preferring instead to calculate
+     * proofs ourselves in consultation directly with the relevant networks.
+     *
+     * @param  string $proof    The stored JSON-LD chainpoint proof
+     * @param  array  $networks An array of available blockchains to consult
+     * @return bool             Returns true if each blockchain found in $network
+     *                          can verify our proof.
+     * @todo   Implement via dedicated classes for each configured blockchain network.
+     */
+    protected function verifyProofDirect(string $proof, array $networks = [])
+    {
+        $result = [];
+
+        foreach ($this->config()->get('blockchain_config') as $config) {
+            if (in_array($config['name'], $networks)) {
+                $implementation = ucfirst(strtolower($config['name']));
+                $node = Injector::inst()->createWithArgs($implementation, [$config]);
+
+                $result[strtolower($config['name'])] = $node->verifyProof($proof);
+            }
+        }
+
+        return !in_array(false, $result);
     }
 
 }

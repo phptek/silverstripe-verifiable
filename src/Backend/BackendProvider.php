@@ -37,6 +37,7 @@ interface BackendProvider
     /**
      * Verify a proof against the backend.
      *
+     * @param  string $proof  A valid JSIN-LD chainpoint proof
      * @return bool
      */
     public function verifyProof(string $proof) : bool;
