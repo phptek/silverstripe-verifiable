@@ -8,9 +8,9 @@
 namespace PhpTek\Verifiable\Backend;
 
 use PhpTek\Verifiable\Backend\BackendProvider;
-use GuzzleHttp\Client;
+use Guzzle\Http\Client;
 use Guzzle\Http\Exception\RequestException;
-use Guzzle\Http\Message\Request;
+use GuzzleHttp\Psr7\Request;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use SilverStripe\Core\Injector\Injector;
@@ -179,7 +179,7 @@ class Chainpoint implements BackendProvider
             'https://c.chainpoint.org/nodes/random',
         ];
 
-        $url = $chainpointUrls[rand(count($randUrls))];
+        $url = $chainpointUrls[rand(1,2)];
         $response = $this->client($url, 'GET');
 
         foreach (json_decode($response->getBody(), true) as $candidate) {

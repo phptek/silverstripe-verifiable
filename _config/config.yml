@@ -2,11 +2,11 @@
 Name: verifiable-config
 ---
 
-PhpTek\Verifiable\VerifiableDataExtension:
+PhpTek\Verifiable\Verify\VerifiableExtension:
   dependencies:
-    verifiableService: '%$PhpTek\Verify\Verifiable'
+    verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
 
-PhpTek\Verifiable\Verifiable:
+PhpTek\Verifiable\Verify\VerifiableService:
   # One of: "trillian" or "chainpoint"
   backend: chainpoint
     

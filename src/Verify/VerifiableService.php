@@ -5,7 +5,7 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable;
+namespace PhpTek\Verifiable\Verify;
 
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\Injectable;
@@ -14,6 +14,7 @@ use SilverStripe\Core\ClassInfo;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Job\BackendVerificationJob;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
+use PhpTek\Verifiable\Backend\BackendProvider;
 
 /**
  * Service class that works as an intermediary between any data model and the
@@ -124,7 +125,7 @@ class VerifiableService
         }
 
         $namedBackend = $this->config()->get('backend');
-        $backends = ClassInfo::implementorsOf('BackendProvider');
+        $backends = ClassInfo::implementorsOf(BackendProvider::class);
 
         foreach ($backends as $backend) {
             if (singleton($backend)->name() === $namedBackend) {

@@ -58,6 +58,11 @@ class VerifiableExtension extends DataExtension
     {
         parent::onAfterWrite();
 
+        // Skip queueing-up a verification process if this is a "create" write
+        if (!$this->getOwner()->exists()) {
+            return;
+        }
+
         // Skip queueing-up another verification process if only "Proof" is modified
         if ($this->getOwner()->isChanged('Proof')) {
             return;
