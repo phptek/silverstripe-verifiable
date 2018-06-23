@@ -10,8 +10,8 @@ namespace PhpTek\Verifiable\ORM\FieldType;
 use PhpTek\JSONText\ORM\FieldType\JSONText;
 
 /**
- * Encapsulates a single chainpoint proof. The proof is usually derived from the
- * "Proof" field on a {@link DataExtension}.
+ * Encapsulates a single chainpoint proof as returned by the currently active Merkle
+ * store e.g. a Blockchain.
  *
  * Makes use of the {@link JSONText} package and wraps simple queries around
  * its raw JSONQuery calls.
@@ -24,7 +24,8 @@ class ChainpointProof extends JSONText
 {
 
     /**
-     * Returns the generated value of the proof's "hash_id_node" key.
+     * Returns the generated value of the proof's "hash_id_node" key. This is used
+     * as a UUID for proofs.
      *
      * @return string
      */

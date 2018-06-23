@@ -10,6 +10,7 @@ namespace PhpTek\Verifiable\Controller;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Versioned\Versioned;
+use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 
 /**
  * Accepts incoming requests for data verification e.g. from within the CMS
@@ -18,7 +19,8 @@ use SilverStripe\Versioned\Versioned;
  * Will proxy validation requests to the currently configured backend for both
  * {@link SiteTree} and {@link DataObject} subclasses.
  *
- * @todo Take into account LastEdited and Created dates, outside of userland control of verifiable_fields
+ * @todo Take into account LastEdited and Created dates, outside of userland control
+ * of verifiable_fields
  */
 class VerificationController extends Controller
 {
@@ -37,11 +39,25 @@ class VerificationController extends Controller
     const STATUS_PROOF_INVALID = 'Invalid Proof';
 
     /**
-     * Invalid hash found. Evidence that the record has been tampered-with.
+     * Invalid local hash found. Evidence that the record has been tampered-with.
      *
      * @var string
      */
-    const STATUS_HASH_INVALID = 'Invalid Hash';
+    const STATUS_HASH_LOCAL_INVALID = 'Local Hash Invalid';
+
+    /**
+     * Invalid remote hash found. Evidence that the record has been tampered-with.
+     *
+     * @var string
+     */
+    const STATUS_HASH_REMOTE_INVALID_NO_DATA = 'Remote Hash No Data';
+
+    /**
+     * Invalid remote hash found. Evidence that the record has been tampered-with.
+     *
+     * @var string
+     */
+    const STATUS_HASH_REMOTE_INVALID_NO_HASH = 'Remote Hash Not Found';
 
     /**
      * Invalid UUID. Evidence that the record has been tampered-with.
@@ -49,6 +65,20 @@ class VerificationController extends Controller
      * @var string
      */
     const STATUS_UUID_INVALID = 'Invalid UUID';
+
+    /**
+     * All checks passed. Submitted hash is verified.
+     *
+     * @var string
+     */
+    const STATUS_VERIFIED = 'Verified';
+
+    /**
+     * All local checks passed. Submitted hash is currently pending.
+     *
+     * @var string
+     */
+    const STATUS_PENDING = 'Pending';
 
     /**
      * @var array
@@ -106,8 +136,9 @@ class VerificationController extends Controller
      * 5. Assert that hash_node_id for that proof returns a valid response from ChainPoint
      * 6. Assert that the returned data contains a matching hash for the new hash
      *
-     * @param  StdClass $record
+     * @param  DataObject $record
      * @return string
+     * @todo Add tests
      */
     public function getVerificationStatus($record)
     {
@@ -125,23 +156,37 @@ class VerificationController extends Controller
 
         // Comparison check between locally stored proof, and re-hashed record data
         if (!$proof->match($reHash = $this->verifiableService->hash($record->normaliseData()))) {
-            return self::STATUS_HASH_INVALID;
+            return self::STATUS_HASH_LOCAL_INVALID;
         }
 
         // Remote verification check that local hash_node_id returns a valid response
-        $response = $this->verifiableService->read($proof->getHashIdNode());
+        // Responds with a binary format proof
+        $responseBinary = $this->verifiableService->read($proof->getHashIdNode());
 
-        if ($response === '[]') {
+        if ($responseBinary === '[]') {
             return self::STATUS_UUID_INVALID;
         }
 
-        // Compare returned hash matches the re-hash
-        $responsProof = Chainpoint::create()
-                ->setValue($response);
+        // Send that binary hash back to the remote and retrieve the stored hash
+        // Could be a full or a partial response
+        $responseProof = ChainpointProof::create()->setValue($responseBinary);
 
-        if (!$responsProof->match($reHash)) {
-            return self::STATUS_HASH_INVALID;
+        if ($responseProof->isPartial()) {
+            return self::STATUS_PENDING;
         }
+
+        if (!$responseJson = $this->verifiableService->verify($responseBinary)) {
+            return self::STATUS_HASH_REMOTE_INVALID_NO_DATA;
+        }
+
+        // Compare returned hash matches the re-hash
+        $responseProof = ChainpointProof::create()->setValue($responseJson);
+
+        if (!$responseProof->match($reHash)) {
+            return self::STATUS_HASH_REMOTE_INVALID_NO_HASH;
+        }
+
+        return self::STATUS_VERIFIED;
     }
 
     /**
@@ -149,14 +194,13 @@ class VerificationController extends Controller
      * and ID.
      *
      * @param  string     $class   A fully-qualified PHP class name.
-     * @param  int        $rid     The "RecordID" of the desired Versioned record.
+     * @param  int        $id      The "RecordID" of the desired Versioned record.
      * @param  int        $version The "Version" of the desired Versioned record.
      * @return mixed null | DataObject
-     * @todo Add an instanceof DataObject check to prevent "SiteTree" being passed for example
      */
-    private function getVersionedRecord(string $class, int $id, int $vid)
+    private function getVersionedRecord(string $class, int $id, int $version)
     {
-        return Versioned::get_version($class, $id, $vid);
+        return Versioned::get_version($class, $id, $version);
     }
 
     /**

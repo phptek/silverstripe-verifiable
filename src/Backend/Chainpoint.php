@@ -16,13 +16,10 @@ use PhpTek\Verifiable\Exception\VerifiableValidationException;
 use SilverStripe\Core\Injector\Injector;
 
 /**
- * Calls the endpoints of the chainpoint.org (Tierion?) network. Based on the Swagger
- * docs found here: https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
+ * Calls the endpoints of the Tierion network's ChainPoint service.
  *
- * @see https://chainpoint.org
  * @see https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
- * @todo Convert partial JSON proofs into binary format and send as POST to /verify
- * @todo When sending verification requests, ensure the stored proof's dates match the response(s)
+ * @see https://chainpoint.org
  */
 class Chainpoint implements BackendProvider
 {
@@ -57,7 +54,7 @@ class Chainpoint implements BackendProvider
      */
     public function getProof(string $hashIdNode) : string
     {
-        $response = $this->client("/proofs", 'GET', ['hashids' => [$hashIdNode]]);
+        $response = $this->client("/proofs/$hashIdNode", 'GET');
 
         return $response->getBody()->getContents() ?? '[]';
     }
@@ -95,7 +92,7 @@ class Chainpoint implements BackendProvider
         }
 
         $response = $this->client('/verify', 'POST', ['proofs' => [$proof]]);
-        $contents = $response->getBody()->getContents();
+        $contents = $response->getBody()->getContents() ?? '[]';
 
         if ($contents === '[]') {
             return false;
@@ -152,15 +149,12 @@ class Chainpoint implements BackendProvider
         $method = strtolower($verb);
         $config = $this->config()->get('client_config');
         $client = new Client([
-            'base_uri' => $simple ? $this->fetchNodeUrl() : '',
+            'base_uri' => $simple ? $this->discoverNode() : '',
             'verify' => true,
             'timeout'  => $config['timeout'],
             'connect_timeout'  => $config['connect_timeout'],
             'allow_redirects' => false,
-            'user-agent' => sprintf(
-                '%s %s',
-                \GuzzleHttp\default_user_agent()
-            )
+            'user-agent' => \GuzzleHttp\default_user_agent(),
         ]);
 
         try {
@@ -178,16 +172,15 @@ class Chainpoint implements BackendProvider
     /**
      * The Tierion network comprises many nodes, some of which may or may not be
      * online. Pings a randomly selected resource URL, who's response should contain
-     * IPs of each advertised node, then calls each until one responds with an
-     * HTTP 200.
+     * IPs of each advertised and audited node, then calls each one until one responds
+     * with an HTTP 200 and returns it.
      *
      * @return string
      * @throws VerifiableBackendException
-     * @todo Set the URL as a class-property and re-use that, rather than re-calling fetchNodeUrl()
+     * @todo Set the URL as a class-property and re-use that, rather than re-calling discoverNode()
      * @todo Make this method re-entrant and try a different URL
-     * @todo Rename method to
      */
-    protected function fetchNodeUrl()
+    protected function discoverNode()
     {
         $chainpointUrls = $this->config()->get('chainpoint_urls');
         $url = $chainpointUrls[rand(0,2)];

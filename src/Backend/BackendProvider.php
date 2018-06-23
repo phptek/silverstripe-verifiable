@@ -8,7 +8,7 @@
 namespace PhpTek\Verifiable\Backend;
 
 /**
- * Defines exactly what backends must look like.
+ * Defines exactly what backends should look like.
  */
 interface BackendProvider
 {

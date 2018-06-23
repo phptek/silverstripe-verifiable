@@ -56,14 +56,14 @@ class VerifiableService
     }
 
     /**
-     * Fetch a chainpoint proof for the passed $hash.
+     * Fetch a chainpoint proof for the passed $hashIdNode.
      *
-     * @param  string $hashId
+     * @param  string $hashIdNode
      * @return string The JSON-LD chainpoint proof.
      */
-    public function read(string $hashId) : string
+    public function read(string $hashIdNode) : string
     {
-        return $this->backend->getProof($hashId);
+        return $this->backend->getProof($hashIdNode);
     }
 
     /**
