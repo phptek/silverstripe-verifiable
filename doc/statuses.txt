@@ -15,7 +15,7 @@
 		<tr>
 			<td>STATUS_PENDING</td>
 			<td>Pending</td>
-			<td>Verification is still pending. If it's been less than an hour since submission, try again soon</td>
+			<td>Verification is still pending. If it's been more than an hour since submission, try again soon</td>
 		</tr>
 		<tr>
 			<td>STATUS_UPSTREAM_ERROR</td>
@@ -30,17 +30,17 @@
 		<tr>
 			<td>STATUS_PROOF_INVALID</td>
 			<td>Invalid Proof</td>
-			<td>An invalid local proof found. Evidence that the record has been tampered-with</td>
+			<td>An invalid local proof was found. Evidence that the record has been tampered-with</td>
 		</tr>
 		<tr>
 			<td>STATUS_HASH_LOCAL_INVALID</td>
 			<td>Local Hash Invalid</td>
-			<td>An invalid local hash found. Evidence that the record has been tampered-with</td>
+			<td>An invalid local hash was found. Evidence that the record has been tampered-with</td>
 		</tr>
 		<tr>
 			<td>STATUS_HASH_REMOTE_INVALID_NO_DATA</td>
 			<td>Remote Hash No Data</td>
-			<td>An invalid remote hash found. Evidence that the record has been tampered-with</td>
+			<td>No remote hash was found. Evidence that the record has been tampered-with</td>
 		</tr>
 		<tr>
 			<td>STATUS_HASH_REMOTE_INVALID_NO_HASH</td>

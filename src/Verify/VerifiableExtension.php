@@ -14,6 +14,7 @@ use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\ToggleCompositeField;
+use SilverStripe\ORM\ArrayList;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass and declaring a
@@ -110,14 +111,19 @@ class VerifiableExtension extends DataExtension
         parent::updateCMSFields($fields);
 
         $owner = $this->getOwner();
-        $list = $owner->Versions()->sort('Version')->map('Version', 'Version');
+        $list = [];
+        $versions = $owner->Versions()->sort('Version');
+
+        foreach ($versions as $item) {
+            $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->Created);
+        }
 
         $fields->addFieldsToTab('Root.Verify', FieldList::create([
             LiteralField::create('Introduction', '<p class="message">Select a version'
                     . ' whose data you wish to verify, then select the "Verify"'
-                    . ' button. The result will be a verification status'
-                    . ' as per the "Status Key" table below.</p>'),
-            DropdownField::create('Version', 'Version', $list->toArray())
+                    . ' button. A verification status will be displayed.'
+                    . ' Please refer to the "Status Key" table below.</p>'),
+            DropdownField::create('Version', 'Version', $list)
                 ->setEmptyString('-- Select One --'),
                 FormAction::create('doVerify', 'Verify'),
             ToggleCompositeField::create('KeyTable', 'Status Key', LiteralField::create('Foo', $this->keyTable())),
@@ -131,7 +137,6 @@ class VerifiableExtension extends DataExtension
      */
     public function keyTable()
     {
-
         return file_get_contents(realpath(__DIR__) . '/../../doc/statuses.txt');
     }
 
