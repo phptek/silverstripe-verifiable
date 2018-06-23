@@ -7,7 +7,7 @@
 
 namespace PhpTek\Verifiable\Verify;
 
-use PhpTek\JSONText\JSONText;
+use PhpTek\JSONText\ORM\FieldType\JSONText;
 
 /**
  * Encapsulates a single chainpoint proof. The proof is usually derived from the

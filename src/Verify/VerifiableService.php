@@ -12,12 +12,8 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\ClassInfo;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
-use PhpTek\Verifiable\Exception\VerifiableServiceException;
 use PhpTek\Verifiable\Job\BackendVerificationJob;
-
-if (!class_exists(Symbiote\QueuedJobs\Services\QueuedJobService)) {
-    throw new VerifiableServiceException('QueuedJobs module is not installed.');
-}
+use Symbiote\QueuedJobs\Services\QueuedJobService;
 
 /**
  * Service class that works as an intermediary between any data model and the

@@ -7,7 +7,7 @@
 
 namespace PhpTek\Verifiable\Verify;
 
-use SilverStripe\Core\DataExtension;
+use SilverStripe\ORM\DataExtension;
 use PhpTek\Verifiable\Verify\ChainpointProof;
 
 /**

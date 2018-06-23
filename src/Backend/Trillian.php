@@ -57,7 +57,16 @@ class Trillian implements BackendProvider
      *
      * {@inheritdoc}
      */
-    public function read(string $hash) : array
+    public function writeHash(string $hash) : string
+    {
+
+    }
+
+    /**
+     *
+     * {@inheritdoc}
+     */
+    public function getProof(string $hash) : string
     {
         if (!$this->connect()) {
             return [];
@@ -68,11 +77,9 @@ class Trillian implements BackendProvider
      *
      * {@inheritdoc}
      */
-    public function write(string $hash) : string
+    public function verifyProof(string $proof) : bool
     {
-        if (!$this->connect()) {
-            return [];
-        }
+
     }
 
     /**
