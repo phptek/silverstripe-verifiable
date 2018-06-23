@@ -1,0 +1,8 @@
+PhpTek\Verifiable\Verifiable:
+  # One of: "trillian" or "tieron"
+  backend: trillian
+#  verifiable_fields:
+#    MyDataObject:
+#      - Foo
+#      - Bar
+    
