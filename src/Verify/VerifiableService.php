@@ -15,6 +15,7 @@ use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Job\BackendVerificationJob;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use PhpTek\Verifiable\Backend\BackendProvider;
+use SilverStripe\ORM\DataObject;
 
 /**
  * Service class that works as an intermediary between any data model and the

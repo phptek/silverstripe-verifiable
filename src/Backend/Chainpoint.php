@@ -10,10 +10,12 @@ namespace PhpTek\Verifiable\Backend;
 use PhpTek\Verifiable\Backend\BackendProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Request;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
+use PhpTek\Verifiable\Exception\VerifiableValidationException;
 use SilverStripe\Core\Injector\Injector;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Handler\CurlHandler;
 
 /**
  * Calls the endpoints of the chainpoint.org (Tierion?) network. Based on the Swagger
@@ -77,16 +79,15 @@ class Chainpoint implements BackendProvider
     }
 
     /**
-     * @param  string $hash
+     * Send an array of hashes for anchoring.
+     *
+     * @param  array $hashes
      * @return string
+     * @todo Rename to anchor() ??
      */
     public function writeHash(array $hashes) : string
     {
         $response = $this->client('/hashes', 'POST', ['hashes' => $hashes]);
-
-        if ($response->getStatusCode() !== 200) {
-            throw new VerifiableBackendException('Unable to write hash to backend.');
-        }
 
         return $response->getBody();
     }
@@ -101,18 +102,13 @@ class Chainpoint implements BackendProvider
     {
         // Consult blockchains directly, if so configured and suitable
         // blockchain full-nodes are available to our RPC connections
-        if ((bool) $this->config()->get('direct_verification') === true) {
+        if ((bool) $this->config()->get('direct_verification')) {
             return $this->backend->verifyDirect($proof);
         }
 
-        $response = $this->client('/verify', 'POST', json_encode(['proofs' => [$hash]]));
+        $response = $this->client('/verify', 'POST', ['proofs' => [$proof]]);
 
-        if ($response->getStatusCode() !== 200) {
-            throw new VerifiableBackendException('Unable to verifiy proof against backend.');
-        }
-
-        return $response->getStatusCode() === 200 &&
-                json_decode($response->getBody(), true)['status'] === 'verified';
+        return json_decode($response->getBody(), true)['status'] === 'verified';
     }
 
     /**
@@ -146,56 +142,69 @@ class Chainpoint implements BackendProvider
     /**
      * Return a client to use for all RPC traffic to this backend.
      *
-     * @param  string                $url
-     * @param  string                $verb
-     * @param  array                 $payload
-     * @param  bool                  $useBase  Pass "base_uri" to {@link Client}.
-     * @return mixed null | Response Guzzle Response object
+     * @param  string   $url
+     * @param  string   $verb
+     * @param  array    $payload
+     * @param  bool     $simple  Pass "base_uri" to {@link Client}.
+     * @return Response Guzzle Response object
+     * @throws VerifiableBackendException
      * @todo Client()->setSslVerification() if required
-     * @todo This request can take some time...consider queuing it?
+     * @todo Use promises to send concurrent requests: 1). Find a node 2). Pass node URL to second request
      */
-    protected function client(string $url, string $verb = 'GET', array $payload = [], bool $useBase = true)
+    protected function client(string $url, string $verb, array $payload = [], bool $simple = true)
     {
+        //$handler = new CurlHandler();
+        //$stack = HandlerStack::create($handler); // Wrap w/ middleware
+
+        $verb = strtoupper($verb);
+        $method = strtolower($verb);
         $client = new Client([
-            'base_uri' => $useBase ? $this->fetchNodeUrl() : '',
-            'timeout'  => $this->config()->get('chainpoint')['params']['timeout'],
+            'base_uri' => $simple ? $this->fetchNodeUrl() : '',
+            'timeout'  => $this->config()->get('params')['timeout'],
+            'allow_redirects' => false,
+            // 'handler' => $stack,
         ]);
-        $request = new Request(
-            strtoupper($verb),
-            $url,
-            [],
-            $payload ? json_encode($payload) : null
-        );
+
+        // Used for async requests (TODO)
+        //$request = new \GuzzleHttp\Psr7\Request($verb, $addr, [], $payload ? json_encode($payload) : null);
 
         try {
-            return $client->send($request);
+            if ($verb === 'POST') {
+                $payload = json_encode(['form_params' => $payload]);
+            }
+
+            return $client->$method($url, $payload);
+            //return $client->request($url, $payload);
         } catch (RequestException $e) {
-            return null;
+            throw new VerifiableValidationException($e->getMessage());
         }
     }
 
     /**
-     * The Tieron network comprises many nodes, some of which may or may not be
-     * online. Pings a randomly selected resource URL, containing IPs of each
-     * advertised node and calls each until one returns an HTTP 200.
+     * The Tierion network comprises many nodes, some of which may or may not be
+     * online. Pings a randomly selected resource URL, who's response should contain
+     * IPs of each advertised node, then calls each until one responds with an
+     * HTTP 200.
      *
      * @return string
-     * @todo throw exception if the randomly selected node URL returns !200
+     * @throws VerifiableBackendException
      */
     protected function fetchNodeUrl()
     {
-        $chainpointUrls = [
-            'https://a.chainpoint.org/nodes/random',
-            'https://b.chainpoint.org/nodes/random',
-            'https://c.chainpoint.org/nodes/random',
-        ];
-
+        $chainpointUrls = $this->config()->get('chainpoint_urls');
         $url = $chainpointUrls[rand(0,2)];
         $response = $this->client($url, 'GET', [], false);
 
-        foreach (json_decode($response->getBody(), true) as $candidate) {
-            $response = $this->client($candidate['public_uri']);
+        // TODO Set the URL as a class-property and re-use that, rather than re-calling fetchNodeUrl()
+        // TODO Make this method re-entrant and try a different URL
+        if ($response->getStatusCode() !== 200) {
+            throw new VerifiableBackendException('Bad response from node source URL');
+        }
 
+        foreach (json_decode($response->getBody(), true) as $candidate) {
+            $response = $this->client($candidate['public_uri'], 'GET', [], false);
+
+            // If for some reason we don't get a response: re-entrant method
             if ($response->getStatusCode() === 200) {
                 return $candidate['public_uri'];
             }

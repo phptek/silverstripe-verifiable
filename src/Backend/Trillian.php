@@ -57,7 +57,7 @@ class Trillian implements BackendProvider
      *
      * {@inheritdoc}
      */
-    public function writeHash(string $hash) : string
+    public function writeHash(array $hash) : string
     {
 
     }

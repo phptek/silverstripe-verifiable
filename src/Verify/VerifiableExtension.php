@@ -75,7 +75,7 @@ class VerifiableExtension extends DataExtension
 
         if ($doWrite) {
             $this->verifiableService->write($verifiable);
-            $this->verifiableService->queueVerification($this->getOwner());
+         //   $this->verifiableService->queueVerification($this->getOwner());
         }
     }
 
@@ -121,7 +121,7 @@ class VerifiableExtension extends DataExtension
         $proof = $this->getOwner()->dbObject('Proof');
 
         // 1). Get the locally stored chainpoint proof
-        if (!$proof->match($hash)) {
+        if (!$proof->exists() || !$proof->match($hash)) {
             return false;
         }
 

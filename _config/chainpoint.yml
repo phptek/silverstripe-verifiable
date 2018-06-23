@@ -4,4 +4,8 @@ Name: verifiable-chainpoint-backend-config
 
 PhpTek\Verifiable\Backend\Chainpoint:
   params:
-    timeout: 200
+    timeout: 0
+  chainpoint_urls:
+    - https://a.chainpoint.org/nodes/random/
+    - https://b.chainpoint.org/nodes/random/
+    - https://c.chainpoint.org/nodes/random/

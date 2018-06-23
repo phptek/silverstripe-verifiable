@@ -7,6 +7,9 @@
 
 namespace PhpTek\Verifiable\Exception;
 
+/**
+ * Thrown when validation errors occur with data to be passed to the backend.
+ */
 class VerifiableValidationException extends \Exception
 {
 }
