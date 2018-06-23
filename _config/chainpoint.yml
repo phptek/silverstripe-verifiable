@@ -1,0 +1,7 @@
+---
+Name: verifiable-chainpoint-backend-config
+---
+
+PhpTek\Verifiable\Backend\Chainpoint:
+  params:
+    timeout: 200

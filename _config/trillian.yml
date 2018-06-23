@@ -1,0 +1,8 @@
+---
+Name: verifiable-trillian-backend-config
+---
+
+PhpTek\Verifiable\Backend\TrillianPersonality:
+  connection:
+    username: foo
+    password: bar

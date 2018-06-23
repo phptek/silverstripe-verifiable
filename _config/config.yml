@@ -1,8 +1,12 @@
+---
+Name: verifiable-config
+---
+
+PhpTek\Verifiable\VerifiableDataExtension:
+  dependencies:
+    verifiableService: '%$PhpTek\Verify\Verifiable'
+
 PhpTek\Verifiable\Verifiable:
-  # One of: "trillian" or "tieron"
-  backend: trillian
-#  verifiable_fields:
-#    MyDataObject:
-#      - Foo
-#      - Bar
+  # One of: "trillian" or "chainpoint"
+  backend: chainpoint
     

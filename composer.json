@@ -7,7 +7,8 @@
     "authors": [
         {
             "name": "Russell Michell",
-            "homepage": "http://theruss.com/"
+            "homepage": "http://theruss.com/",
+            "email" : "russ@theruss.com"
         },
         {
             "name": "Elliot Sawyer"
@@ -15,7 +16,9 @@
     ],
     "require": {
         "php": ">=7.0",
-        "silverstripe/framework": "4.1.0"
+        "silverstripe/framework": "4.1.0",
+        "phptek/jsontext": "^2.0.0",
+        "guzzle/guzzle": "^3.9"
     },
     "require-dev": {
         "phpunit/PHPUnit": "^5.7"
@@ -25,9 +28,6 @@
     },
     "extra": {
         "installer-name": "verifiable"
-    },
-    "suggest": {
-        "phptek/jsontext": "Optionally store chainpoint proofs in a dedicated JSON store"
     },
     "minimum-stability": "dev"
 }

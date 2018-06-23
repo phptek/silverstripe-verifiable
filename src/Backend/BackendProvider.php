@@ -20,30 +20,25 @@ interface BackendProvider
     public function name() : string;
 
     /**
-     * Establish a connection to this backend.
-     *
-     * @return bool True if connection was successful, false otherwise.
-     */
-    public function connect() : bool;
-
-    /**
-     * Write to this backend.
+     * Write a hash to this backend.
      *
      * @param  string $hash The hashed data to be written
      * @return string       A valid JSON-LD ChainPoint Proof
-     * @see    https://chainpoint.org/
      */
-    public function write(string $hash) : string;
+    public function writeHash(string $hash) : string;
 
     /**
-     * Read record(s) from this backend.
+     * Read a proof from this backend.
      *
-     * @return array An array comprising one or more arrays who's values are:
-     *               1). The Merkle Root hash
-     *               2). The requested leaf-node hash
+     * @return string A JSON-LD chainpoint proof.
      */
-    public function read(string $hash) : array;
+    public function getProof(string $hash) : array;
 
-}
+    /**
+     * Verify a proof against the backend.
+     *
+     * @return bool
+     */
+    public function verifyProof(string $proof) : bool;
 
 }
