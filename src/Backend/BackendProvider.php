@@ -32,7 +32,7 @@ interface BackendProvider
      *
      * @return string A JSON-LD chainpoint proof.
      */
-    public function getProof(string $hash) : array;
+    public function getProof(string $hash) : string;
 
     /**
      * Verify a proof against the backend.

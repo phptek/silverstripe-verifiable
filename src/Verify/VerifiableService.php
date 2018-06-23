@@ -42,7 +42,7 @@ class VerifiableService
      */
     public function __construct()
     {
-        $this->backend = $this->setBackend();
+        $this->setBackend();
     }
 
     /**
@@ -83,13 +83,15 @@ class VerifiableService
      * Set, instantiate and return a new Merkle Tree storage backend.
      *
      * @param  BackendProvider $provider Optional manually pased backend.
-     * @return BackendProvider
+     * @return VerifiableService
      * @throws VerifiableBackendException
      */
     public function setBackend(BackendProvider $provider = null)
     {
         if ($provider) {
-            return $provider;
+            $this->backend = $provider;
+
+            return $this;
         }
 
         $namedBackend = $this->config()->get('backend');
@@ -97,7 +99,9 @@ class VerifiableService
 
         foreach ($backends as $backend) {
             if (singleton($backend)->name() === $namedBackend) {
-                return Injector::inst()->create($backend);
+                $this->backend = Injector::inst()->create($backend);
+                
+                return $this;
             }
         }
 

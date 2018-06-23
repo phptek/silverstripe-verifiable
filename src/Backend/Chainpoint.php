@@ -22,8 +22,7 @@ class Chainpoint implements BackendProvider
     use Configurable;
 
     /**
-     *
-     * {@inheritdoc}
+     * @return string
      */
     public function name() : string
     {
@@ -31,10 +30,11 @@ class Chainpoint implements BackendProvider
     }
 
     /**
-     *
+     * @param  string $hash
+     * @return string
      * @throws VerifiableBackendException
      */
-    public function getProof(string $hash) : array
+    public function getProof(string $hash) : string
     {
         $response = $this->client('/proofs', 'GET', $hash);
 
@@ -46,8 +46,8 @@ class Chainpoint implements BackendProvider
     }
 
     /**
-     *
-     * {@inheritdoc}
+     * @param  string $hash
+     * @return string
      */
     public function writeHash(string $hash) : string
     {
