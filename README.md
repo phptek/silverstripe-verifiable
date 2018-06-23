@@ -6,21 +6,23 @@
 
 ## What is this?
 
-For decades software users have taken it for granted that their application's data is safe from tampering. That developers, vendors, DBA's and even power-users, are somehow above tampering with things that affect data integrity. We trust that these parties will not behave in a manner counter to the security and integrity of an application's data.
+For decades, software users have taken it for granted that their application data is safe from tampering. That developers, vendors and DBA's are somehow above changing things that fundamentally affects data integrity. We trust that these parties will not behave in a manner counter to the security and integrity of application data.
 
-But what do we mean by "integrity"? Well we don't mean "tamper proof" becuase there can never be any such guarantee. However we can do "Verified Data"; data who's integrity is mathatically proveable. If something changes then an audit-trail of sorts is available that can be consulted.
+But what do we mean by "integrity"? Well we don't mean "tamper proof", becuase there is no such guarantee. However we can provide _verifiability_; data who's integrity is mathatically proveable at a given point in time. When something changes when perhaps it isn't supposed to, then an audit-trail of sorts is available that can be consulted.
 
-This is an addon for SilverStripe applications that provides content authors and business owners with the ability to verify the integrity of their data over time; Data entered by an author can be verified independently, and perhaps for many years after the fact.
+This is an addon for SilverStripe applications that provides content authors and business owners with the ability to verify the integrity of their data over time; Data entered by an author can be verified independently, and for years after the fact.
 
 ## How does it work?
 
-This module will connect to a backend service that implements Merkle Storage (Or binary tree storage). At time of writing, the two service classes we are aware of that fit the bill are most public blockchains and standalone Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
+This module will connect to a backend service that implements a [Merkle Tree (Or Binary Hash Tree)](https://en.wikipedia.org/wiki/Merkle_tree). At time of writing, the two service classifications we are aware of that fit the bill are; most public blockchains and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
 
-As part of the module's configuration, it will need to know which service should be used to "anchor" metadata to such that data verification can occur. This can be done in several different ways, and the module provides 2 mechanisms or "backends" to acheive this. Once data has been successfully anchored to the Merkle Tree store, the module will produce a valid JSON-LD [Chainpoint Proof](https://chainpoint.org/) which is stored to a pre-defined field. This can be used to programmatically or manually verify some data's integrity against the Merkle Storage service.
+Module configuration comprises telling it which of these services should be used to "anchor" data to, such that verification may occur. This can be done in several different ways, and the module provides 2 "backends" to acheive this, described below. Once data has been successfully anchored to the backend, the module produces a valid JSON-LD [Chainpoint Proof](https://chainpoint.org/) which is stored to a pre-defined, [JSON-aware](https://github.com/phptek/silverstripe-verifiable/) field in SilverStripe's database. This can be used to programmatically or manually verify data integrity against the Merkle Storage backend.
 
-To provide an additional level of security, generated hashes can also be digitally signed by users.
+To provide an additional level of security, generated hashes can also be digitally signed by users. (Not implemented yet).
 
 ## Trillian
+
+Incomplete support.
 
 [Trillian](https://github.com/google/trillian/) is an OSS project from Google that provides a complimentary verification service to some data-store (SilverStripe's database for example) by means of a Merkle Tree. With this backend enabled in the module's YML config, fields on your `DataObject` subclasses can be hashed and stored as leaf nodes in Trillian itself, where the backend is known in Trillan-speak as a ["Personality"](https://github.com/google/trillian/#personalities). 
 
@@ -44,9 +46,8 @@ My\Name\Space\Model\MyModel:
   extensions:
     - PhpTek\Verifiable\Verify\VerifiableExtension
   verifiable_fields:
-    - Foo
-    - Bar
-    - FooBar
+    - Title
+    - Content
 ```
 
 Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.
@@ -65,4 +66,4 @@ Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's
 
 ## TODO
 
-* What to do abput `Versioned::onAfterRollback()` - disallow roliwng-back to previous version if it's verifiable (That is: It has populated "Proof" field)?
+* What to do about `Versioned::onAfterRollback()` - disallow rolling-back to previous version if it's verifiable (That is: It has populated "Proof" field)?
