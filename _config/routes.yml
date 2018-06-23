@@ -7,4 +7,4 @@ After:
 
 SilverStripe\Control\Director:
   rules:
-    verify: 'PhpTek\Verifiable\Controller\VerificationController'
+    verifiable//$Action/$ClassName/$ModelID: 'PhpTek\Verifiable\Controller\VerificationController'

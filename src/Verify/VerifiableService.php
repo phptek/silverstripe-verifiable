@@ -27,6 +27,27 @@ class VerifiableService
     use Configurable;
 
     /**
+     * Represents a failed verification.
+     *
+     * @var string
+     */
+    const STATUS_FAILURE = 'FAIL';
+
+    /**
+     * Represents a passed verification.
+     *
+     * @var string
+     */
+    const STATUS_PASSED = 'PASS';
+
+    /**
+     * Represents a pending verification.
+     *
+     * @var string
+     */
+    const STATUS_PENDING = 'PENDING';
+
+    /**
      * The hashing function to use.
      *
      * @var string
@@ -84,15 +105,40 @@ class VerifiableService
     }
 
     /**
-     * Does the passed JSON response represent a PARTIAL verification?
+     * Gives us the current verification status of the given record. Takes into
+     * account the state of the saved proof and a backend verification call.
      *
-     * @param  string $body
+     * @param  DataObject $record
+     * @return string
+     */
+    public function getVerificationStatus(DataObject $record)
+    {
+        $proofData = $record->dbObject('Proof')->getStoreAsArray();
+        $fieldData = $record->normaliseData();
+        $proofIsComplete = $this->proofIsComplete($proofData);
+        $proofIsPartial = $this->proofIsPartial($proofData);
+        $proofIsVerified = $record->verify($fieldData, false) === true;
+
+        switch (true) {
+            case $proofIsComplete && $proofIsVerified:
+                return self::STATUS_PASS;
+            case $proofIsPartial:
+                return self::STATUS_PENDING;
+            case $proofIsComplete && !$proofIsVerified:
+            default:
+                return self::STATUS_FAILURE;
+        }
+    }
+
+    /**
+     * Does the passed data response represent a PARTIAL verification as far as
+     * the local database is concerned?
+     *
+     * @param  array $data
      * @return bool
      */
-    public function isVerifiedPartial(string $body) : bool
+    public function proofIsPartial(array $data) : bool
     {
-        $data = json_decode($body, true);
-
         if (isset($data['anchors_complete']) && count($data['anchors_complete']) === 0) {
             return false;
         }
@@ -101,15 +147,14 @@ class VerifiableService
     }
 
     /**
-     * Does the passed JSON response represent a FULL verification?
+     * Does the passed data represent a FULL verification as far as the local database
+     * is concerned?
      *
-     * @param  string $body
+     * @param  array $data
      * @return bool
      */
-    public function isVerifiedFull(string $body) : bool
+    public function proofIsComplete(array $data) : bool
     {
-        $data = json_decode($body, true);
-
         if (empty($data['anchors_complete']) || empty($data['anchors'])) {
             return false;
         }

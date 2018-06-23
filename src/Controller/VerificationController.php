@@ -10,7 +10,6 @@ namespace PhpTek\Verifiable\Controller;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\ORM\DataObject;
 
 /**
@@ -22,64 +21,47 @@ use SilverStripe\ORM\DataObject;
  */
 class VerificationController extends Controller
 {
+
     /**
-     * @config
      * @var array
      */
     private static $allowed_actions = [
-        'page',
-        'model',
+        'verify',
     ];
 
     /**
-     * Verify a page: /verify/page/<ID> by echoing a JSON response for
-     * consumption by client-side logic.
+     * Responds to URIs of the following prototype: /verifiable/verify/<model>/<ID>
+     * by echoing a JSON response for consumption by client-side logic.
+     *
+     * Also provides x2 extension points, both of which are passed a copy of
+     * the contents of the managed record's "Proof" {@link ChainpointProof} "Proof"
+     * field, an indirect {@link DBField} subclass.
+     *
+     * - onBeforeVerify()
+     * - onAfterVerify()
      *
      * @param  HTTPRequest $request
      * @return void
+     * @todo Update "Status" to be one of: "Pending" | "Verified" | "Failed"
      */
-    public function page(HTTPRequest $request)
+    public function verify(HTTPRequest $request)
     {
-        $id = $request->param('ID');
-
-        if (empty($id) || !is_numeric($id)) {
-            return $this->httpError(400, 'Bad request');
-        }
-
-        if (!$record = $this->getVersionedRecord(SiteTree::class, $id)) {
-            return false;
-        }
-
-        $proof = $record->dbObject('Proof');
-        $result = json_decode($this->verifiableService->read($proof->getHashIdNode()), true);
-
-        echo $this->verificationResponse($record, $result);
-    }
-
-    /**
-     * Verify a data model: /verify/model/<Class>/<ID> by echoing a JSON response for
-     * consumption by client-side logic.
-     *
-     * @param  HTTPRequest $request
-     * @return void
-     */
-    public function model(HTTPRequest $request)
-    {
-        $class = $request->param('Class');
-        $id = $request->param('ID');
+        $class = $request->param('ClassName');
+        $id = $request->param('ModelID');
 
         if (empty($id) || !is_numeric($id) || empty($class)) {
             return $this->httpError(400, 'Bad request');
         }
 
         if (!$record = $this->getVersionedRecord($class, $id)) {
-            return false;
+            return $this->httpError(400, 'Bad request');
         }
 
-        $proof = $record->dbObject('Proof');
-        $result = json_decode($this->verifiableService->read($proof->getHashIdNode()), true);
-
-        echo $this->verificationResponse($record, $result);
+        echo json_encode([
+            'ID' => "$record->ID",
+            'Class' => get_class($record),
+            'Status' => $this->verifiableService->getVerificationStatus($record),
+        ], JSON_UNESCAPED_UNICODE);
     }
 
     /**
@@ -89,29 +71,11 @@ class VerificationController extends Controller
      * @param  string     $class A fully-qualified PHP class name.
      * @param  int        $id    The RecordID of the desired Versioned record.
      * @return DataObject
+     * @todo Add an instanceof DataObject check to prevent "SiteTree" being passed for example
      */
     private function getVersionedRecord(string $class, int $id) : DataObject
     {
         return Versioned::get_latest_version($class, $id);
-    }
-
-    /**
-     * Return an JSON representation of the verification result for internal
-     * use.
-     *
-     * @param  DataObject $record
-     * @param  string     $result
-     * @return string
-     */
-    private function verificationResponse($record, $result)
-    {
-        $isVerified = $record->verify($result, false) ? 'true' : 'false';
-
-        return json_encode([
-            'ID' => "$record->ID",
-            'Class' => get_class($record),
-            'IsVerified' => $isVerified,
-        ], JSON_UNESCAPED_UNICODE);
     }
 
 }

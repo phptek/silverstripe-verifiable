@@ -9,6 +9,9 @@ namespace PhpTek\Verifiable\Verify;
 
 use SilverStripe\ORM\DataExtension;
 use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Forms\LiteralField;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass and declaring a
@@ -124,15 +127,13 @@ class VerifiableExtension extends DataExtension
         $hash = $this->verifiableService->hash($data);
         $proof = $this->getOwner()->dbObject('Proof');
 
-        // 1). Get the locally stored chainpoint proof
-        if (!$proof->exists() || !$proof->match($hash)) {
+        // 1). Does the passed hash-of-the-data match the hash in the Proof?
+        if (!$proof->exists() || $proof->getHash() !== $hash) {
             return false;
         }
 
-        // TODO Verify data in "Proof" field
-
         // 2). Send the local proof to the backend for verification
-        if (!$this->verificationService->verify($proof)) {
+        if (!$this->verifiableService->verify($proof->getHash())) {
             return false;
         }
 
@@ -150,6 +151,21 @@ class VerifiableExtension extends DataExtension
     public function writeProof(string $proof)
     {
         $this->getOwner()->setField('Proof', $proof)->write();
+    }
+
+    /**
+     * @param  FieldList $fields
+     * @return void
+     */
+    public function updateCMSFields(FieldList $fields)
+    {
+        parent::updateCMSFields($fields);
+
+        $class = get_class($this->getOwner());
+        $id = $this->getOwner()->ID;
+        $content = sprintf('<p class="verification-field"><a href="/verify/%s/%d">Verifiy</a>', $class, $id);
+
+        $fields->insertBefore('Title', LiteralField::create('verify', $content));
     }
 
 }

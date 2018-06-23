@@ -43,14 +43,4 @@ class ChainpointProof extends JSONText
         return $this->query('->>', 'hash')['hash'];
     }
 
-    /**
-     * Does the passed $hash match in the stored proof?
-     *
-     * @return bool
-     */
-    public function match(string $hash) : bool
-    {
-        return $hash === $this->getHash();
-    }
-
 }
