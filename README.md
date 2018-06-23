@@ -48,6 +48,10 @@ My\Name\Space\Model\MyModel:
   verifiable_fields:
     - Title
     - Content
+
+PhpTek\Verifiable\Verify\VerifiableService:
+  # One of: "trillian" or "chainpoint"
+  backend: chainpoint
 ```
 
 Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.
