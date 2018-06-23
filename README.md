@@ -53,8 +53,10 @@ Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's
 
 ## Features
 
-* Authors can automatically send hashes for anchoring after a "publish" action
+* Authors can automatically send hashes of data-model data for anchoring after a "publish" action
+* Authors can automatically send hashes of uploaded file content
 * Authors can arbitrarily elect to re-verify specific content/document version histories via the CMS
+* An extension for silverstripe/restfulserver, comprising a `verify` endpoint
 * Authors can digitally sign changes, making SilverStripe act as a proxy notary
 * Developers can configure the module to skip the Tierion Network in favour of direct verification via local Bitcoind and Geth clients
 * Developers can configure the module to hash only a subset of model-fields

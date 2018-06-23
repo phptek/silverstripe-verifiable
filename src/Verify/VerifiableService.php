@@ -54,9 +54,9 @@ class VerifiableService
      * {@link DataObject}.
      *
      * @param  array $data
-     * @return bool  True if the write went through OK. False otherwise.
+     * @return mixed  The result of this call to the backend.
      */
-    public function write(array $data) : bool
+    public function write(array $data)
     {
         return $this->backend->writeHash([$this->hash($data)]);
     }

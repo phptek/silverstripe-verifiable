@@ -73,9 +73,12 @@ class VerifiableExtension extends DataExtension
         $verifiable = $this->normaliseData();
         $doWrite = count($verifiable) && (count($verifiableFields) !== $skipWriteCount);
 
-        if ($doWrite) {
-            $this->verifiableService->write($verifiable);
-         //   $this->verifiableService->queueVerification($this->getOwner());
+        if ($doWrite && $proofData = $this->verifiableService->write($verifiable)) {
+            // Save tentative response
+            $this->getOwner()->setField('Proof', $proofData)->write();
+            // Fire off a job to periodically check if verification is complete
+            // TODO: Use AsyncPHP and use a callback OR check if API has a callback endpoint it can call on our end (Tierion does)
+            $this->verifiableService->queueVerification($this->getOwner());
         }
     }
 

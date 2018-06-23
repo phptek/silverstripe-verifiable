@@ -66,6 +66,7 @@ class Chainpoint implements BackendProvider
      * @param  string $hash
      * @return string
      * @throws VerifiableBackendException
+     * @todo Rename to proofs() as per the "gateway" we're calling
      */
     public function getProof(string $hash) : string
     {
@@ -79,11 +80,13 @@ class Chainpoint implements BackendProvider
     }
 
     /**
-     * Send an array of hashes for anchoring.
+     * Send an array of hashes for anchoring. Initial responses look like the following:
+     *
+     *  {"meta":{"submitted_at":"2018-06-09T00:27:03Z","processing_hints":{"cal":"2018-06-09T00:27:18Z","btc":"2018-06-09T01:28:03Z"}},"hashes":[{"hash_id_node":"d5558060-6b7b-11e8-a2e4-01345eeea48d","hash":"31bddc977afa06935e3568331264f4efcf720a62"}]}
      *
      * @param  array $hashes
      * @return string
-     * @todo Rename to anchor() ??
+     * @todo Rename to hashes() as per the "gateway" we're calling
      */
     public function writeHash(array $hashes) : string
     {
@@ -97,6 +100,7 @@ class Chainpoint implements BackendProvider
      *
      * @param  string $proof A valid JSON-LD Chainpoint Proof.
      * @return bool
+     * @todo Rename to verify() as per the "gateway" we're calling
      */
     public function verifyProof(string $proof) : bool
     {
@@ -150,34 +154,64 @@ class Chainpoint implements BackendProvider
      * @throws VerifiableBackendException
      * @todo Client()->setSslVerification() if required
      * @todo Use promises to send concurrent requests: 1). Find a node 2). Pass node URL to second request
+     * @todo Use 'body' in POST requests?
+     * @todo Port to dedicated ChainpointClient class
      */
     protected function client(string $url, string $verb, array $payload = [], bool $simple = true)
     {
-        //$handler = new CurlHandler();
-        //$stack = HandlerStack::create($handler); // Wrap w/ middleware
-
         $verb = strtoupper($verb);
         $method = strtolower($verb);
+        $config = $this->config()->get('client_config');
         $client = new Client([
             'base_uri' => $simple ? $this->fetchNodeUrl() : '',
-            'timeout'  => $this->config()->get('params')['timeout'],
+            'verify' => true,
+            'timeout'  => $config['timeout'],
+            'connect_timeout'  => $config['connect_timeout'],
             'allow_redirects' => false,
-            // 'handler' => $stack,
+            'user-agent' => sprintf(
+                '%s %s',
+                \GuzzleHttp\default_user_agent(),
+                $this->getInfoFromComposer('silverstripe/framework'),
+                'phptek/verifiable'
+            ),
         ]);
 
-        // Used for async requests (TODO)
-        //$request = new \GuzzleHttp\Psr7\Request($verb, $addr, [], $payload ? json_encode($payload) : null);
-
         try {
-            if ($verb === 'POST') {
-                $payload = json_encode(['form_params' => $payload]);
+            // json_encodes POSTed data and sends correct Content-Type header
+            if ($payload && $verb === 'POST') {
+                $payload['json'] = $payload;
             }
 
             return $client->$method($url, $payload);
-            //return $client->request($url, $payload);
         } catch (RequestException $e) {
             throw new VerifiableValidationException($e->getMessage());
         }
+    }
+
+    /**
+     * Return the version of $pkg taken from composer.lock.
+     *
+     * @param  string $pkg e.g. "silverstripe/framework"
+     * @return string
+     * @todo Port to dedicated ChainpointClient class
+     */
+    protected function getInfoFromComposer($pkg)
+    {
+        $lockFileJSON = BASE_PATH . '/composer.lock';
+
+        if (!file_exists($lockFileJSON) || !is_readable($lockFileJSON)) {
+            return self::SLW_NOOP;
+        }
+
+        $lockFileData = json_decode(file_get_contents($lockFileJSON), true);
+
+        foreach ($lockFileData['packages'] as $package) {
+            if ($package['name'] === $pkg) {
+                return $package['version'];
+            }
+        }
+
+        return self::SLW_NOOP;
     }
 
     /**
