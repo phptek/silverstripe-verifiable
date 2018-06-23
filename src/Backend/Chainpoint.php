@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @author  Russell MIchell 2018 <russ@theruss.com>
+ * @author  Russell Michell 2018 <russ@theruss.com>
  * @package silverstripe-verifiable
  */
 
@@ -63,7 +63,7 @@ class Chainpoint implements BackendProvider
      */
     public function getProof(string $hash) : string
     {
-        $response = $this->client('/proofs', 'GET', $hash);
+        $response = $this->client("/proofs/$hash", 'GET');
 
         if ($response->getStatusCode() !== 200) {
             throw new VerifiableBackendException('Unable to fetch proof from backend.');
@@ -79,6 +79,10 @@ class Chainpoint implements BackendProvider
     public function writeHash(string $hash) : string
     {
         $response = $this->client('/hashes', 'POST', ['hashes' => $hash]);
+
+        if ($response->getStatusCode() !== 200) {
+            throw new VerifiableBackendException('Unable to write hash to backend.');
+        }
 
         return $response->getBody();
     }
@@ -99,8 +103,40 @@ class Chainpoint implements BackendProvider
 
         $response = $this->client('/verify', 'POST', json_encode(['proofs' => [$hash]]));
 
+        if ($response->getStatusCode() !== 200) {
+            throw new VerifiableBackendException('Unable to verifiy proof against backend.');
+        }
+
         return $response->getStatusCode() === 200 &&
                 json_decode($response->getBody(), true)['status'] === 'verified';
+    }
+
+    /**
+     * For each of this backend's supported blockchain networks, skips any intermediate
+     * verification steps through the Tieron network, preferring instead to calculate
+     * proofs ourselves in consultation directly with the relevant networks.
+     *
+     * @param  string $proof    The stored JSON-LD chainpoint proof
+     * @param  array  $networks An array of available blockchains to consult
+     * @return bool             Returns true if each blockchain found in $network
+     *                          can verify our proof.
+     * @todo   Implement via dedicated classes for each configured blockchain network.
+     * @see    https://runkit.com/tierion/verify-a-chainpoint-proof-directly-using-bitcoin
+     */
+    protected function verifyProofDirect(string $proof, array $networks = [])
+    {
+        $result = [];
+
+        foreach ($this->config()->get('blockchain_config') as $config) {
+            if (in_array($config['name'], $networks)) {
+                $implementation = ucfirst(strtolower($config['name']));
+                $node = Injector::inst()->createWithArgs($implementation, [$config]);
+
+                $result[strtolower($config['name'])] = $node->verifyProof($proof);
+            }
+        }
+
+        return !in_array(false, $result);
     }
 
     /**
@@ -153,33 +189,6 @@ class Chainpoint implements BackendProvider
                 return $candidate['public_uri'];
             }
         }
-    }
-
-    /**
-     * For each of this backend's supported blockchain networks, skips any intermediate
-     * verification steps through the Tieron network, preferring instead to calculate
-     * proofs ourselves in consultation directly with the relevant networks.
-     *
-     * @param  string $proof    The stored JSON-LD chainpoint proof
-     * @param  array  $networks An array of available blockchains to consult
-     * @return bool             Returns true if each blockchain found in $network
-     *                          can verify our proof.
-     * @todo   Implement via dedicated classes for each configured blockchain network.
-     */
-    protected function verifyProofDirect(string $proof, array $networks = [])
-    {
-        $result = [];
-
-        foreach ($this->config()->get('blockchain_config') as $config) {
-            if (in_array($config['name'], $networks)) {
-                $implementation = ucfirst(strtolower($config['name']));
-                $node = Injector::inst()->createWithArgs($implementation, [$config]);
-
-                $result[strtolower($config['name'])] = $node->verifyProof($proof);
-            }
-        }
-
-        return !in_array(false, $result);
     }
 
 }

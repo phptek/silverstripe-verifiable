@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @author  Russell MIchell 2018 <russ@theruss.com>
+ * @author  Russell Michell 2018 <russ@theruss.com>
  * @package silverstripe-verifiable
  */
 

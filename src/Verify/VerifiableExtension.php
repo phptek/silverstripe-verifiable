@@ -11,21 +11,20 @@ use SilverStripe\Core\DataExtension;
 use PhpTek\Verifiable\Verify\ChainpointProof;
 
 /**
- * By attaching to any {@link DataObject} subclass, including {@link SiteTree}
- * subclasses, and declaring a $verifiable_fields array in YML config, all subsequent
- * database writes will be passed through here via onAfterWrite();
+ * By attaching this extension to any {@link DataObject} subclass and declaring a
+ * $verifiable_fields array in YML config, all subsequent database writes will
+ * be passed through here via {@link $this->onAfterWrite()};
  *
- * This {@link DataExtension} also provides a single field to which all verifiable
- * chainpoint proofs are stored in a queryable JSON-aware field.
+ * This {@link DataExtension} also provides a single field to which all verified
+ * and verifiable chainpoint proofs are stored in a queryable JSON-aware field.
  *
- * @todo Flag to API users that confirmation has not yet occurred.
  * @todo Store the hash function used and if subsequent verifications
- *       fail because differing hash functions are used, throw an exception
+ *       fail because differing hash functions are used, throw an exception.
  */
 class VerifiableExtension extends DataExtension
 {
     /**
-     * Declare a field on this owner where all chainpoint proofs should be stored.
+     * Declares a JSON-aware {@link DBField} where all chainpoint proofs are stored.
      *
      * @var array
      * @config
@@ -35,7 +34,7 @@ class VerifiableExtension extends DataExtension
     ];
 
     /**
-     * These field's values will be hashed and committed to the current backend.
+     * Field values will be hashed and committed to the current backend.
      *
      * @var array
      * @config
@@ -43,33 +42,41 @@ class VerifiableExtension extends DataExtension
     private static $verifiable_fields = [];
 
     /**
-     * After each write, the desired field's data is compiled into a string
-     * and submitted as a hash to the currently configured backend.
+     * After each write, the desired data is compiled into a string
+     * and submitted as a hash to the current backend.
      *
      * Once written, we poll the backend to receive the chainpoint proof
      * which we'll need for subsequent verification checks made against the
      * backend.
      *
-     * @return void
+     * If only the "Proof" field has been written-to, this should not constitute
+     * a write that we need to do anything with, and is therefore ignored.
+     *
+     * @return mixed null | void
      */
     public function onAfterWrite()
     {
         parent::onAfterWrite();
 
+        // Skip queueing-up another verification process if only "Proof" is modified
+        if ($this->getOwner()->isChanged('Proof')) {
+            return;
+        }
+
         $verifiable = $this->normaliseData();
 
         if (count($verifiable)) {
             $this->verifiableService->write($verifiable);
-            $this->verifiableService->queuePing($this->getOwner());
+            $this->verifiableService->queueVerification($this->getOwner());
         }
     }
 
     /**
-     * Normalise this model's data such that it is best suited to being hashed.
+     * Normalise this model's data so it's suited to being hashed.
      *
      * @return array
      */
-    public function normaliseData() : string
+    public function normaliseData() : array
     {
         $fields = $this->getOwner()->config()->get('verifiable_fields');
         $verifiable = [];
@@ -80,7 +87,6 @@ class VerifiableExtension extends DataExtension
 
         return $verifiable;
     }
-
 
     /**
      * Central to the whole package, this method is passed an array of fields
@@ -117,4 +123,3 @@ class VerifiableExtension extends DataExtension
     }
 
 }
-

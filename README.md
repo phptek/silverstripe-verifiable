@@ -8,7 +8,7 @@
 
 ...A WORK IN PROGRESS...
 
-A module for SilverStripe applications that provides content authors and business owners with the ability to verify integrity of their data over time; Data entered by an author can be verified independently, and perhaps for many years after the fact.
+A module for SilverStripe applications that provides content authors and business owners with the ability to verify the integrity of their data over time; Data entered by an author can be verified independently, and perhaps for many years after the fact.
 
 Software users have for decades taken it for granted that their application's data is safe from tampering. That developers, vendors, DBA's and even power-users, are somehow above tampering with things that affect data integrity. Application users simply trust that these parties will not behave in a manner counter to the security and integrity of an application's data.
 
@@ -38,7 +38,7 @@ We make use of REST calls to the [Tieron](https://tieron.com/) blockchain networ
 
 ## Configuration
 
-Add the `VerifiableExtension` to each of your data-models (including `SiteTree` subclasses) that you'd like to be "Verifiable", and for each such model, declare a list of fields who's data should be verifiable:
+Add the `VerifiableExtension` to each of your data-models that you'd like to be "Verifiable", and for each such model, declare a list of fields who's data should be verifiable:
 
 
 ```YML
@@ -51,4 +51,4 @@ My\Name\Space\Model\MyModel:
     - FooBar
 ```
 
-Be sure to run `flush=all` via your browser or the CLI to refresh SilversStripe's YML config cache.
+Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.

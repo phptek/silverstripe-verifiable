@@ -17,6 +17,7 @@
     "require": {
         "php": ">=7.0",
         "silverstripe/framework": "4.1.0",
+        "symbiote/queuedjobs": "^5.2.0",
         "phptek/jsontext": "^2.0.0",
         "guzzle/guzzle": "^3.9"
     },
