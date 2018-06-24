@@ -6,15 +6,19 @@
 
 ## What is this?
 
-For decades, software users have taken it for granted that their application data is safe from tampering. That developers, vendors and DBA's are somehow above changing things that fundamentally affects data integrity. We trust that these parties will not behave in a manner counter to the security and integrity of application data.
+For decades software users have taken it for granted that their application's data is safe from tampering. That developers, vendors and DBA's are somehow above changing things that will fundamentally affect data integrity. We have trusted that parties will not behave in a manner counter to the security and integrity of application data.
 
-But what do we mean by "integrity"? Well we don't mean "tamper proof", becuase there is no such guarantee. However we can provide _verifiability_; data who's integrity is mathatically proveable at a given point in time. When something changes when perhaps it isn't supposed to, then an audit-trail of sorts is available that can be consulted.
+Because no such system can claim _immutibility_ we therefore offer _verifiability_; data who's integrity is mathematically verifiable at some point in time. If something were to change, perhaps when it isn't supposed to change, then an audit-trail of sorts is available that can be consulted.
 
-This is an addon for SilverStripe applications that provides content authors and business owners with the ability to verify the integrity of their data over time; Data entered by an author can be verified independently, and for years after the fact.
+This is an addon for SilverStripe applications that gives content authors and business owners the ability to verify the integrity of their data at any point in time; Data entered by an author can be verified independently, and for years after the fact.
+
+By default, the module offers a simple CMS UI that allows configurable content of a specific version of any page, to be verified as not having been tampered-with.
+
+Of course, verifiability is not restricted for use in identifying bad behaviour. In the main, the data verifiability community is more concerned with _transparency_, especially in the context of public data.
 
 ## How does it work?
 
-This module will connect to a backend service that implements a [Merkle Tree (Or Binary Hash Tree)](https://en.wikipedia.org/wiki/Merkle_tree). At time of writing, the two service classifications we are aware of that fit the bill are; most public blockchains and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
+With regard to the default functionality; on each page write, a sha256 hash of selected field-data is taken and submitted to a 3rd party backend that implements a [Merkle Tree (Or Binary Hash Tree)](https://en.wikipedia.org/wiki/Merkle_tree). At time of writing, the two service classifications we are aware of that fit the bill are; most public blockchains and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
 
 Module configuration comprises telling it which of these services should be used to "anchor" data to, such that verification may occur. This can be done in several different ways, and the module provides 2 "backends" to acheive this, described below. Once data has been successfully anchored to the backend, the module produces a valid JSON-LD [Chainpoint Proof](https://chainpoint.org/) which is stored to a pre-defined, [JSON-aware](https://github.com/phptek/silverstripe-verifiable/) field in SilverStripe's database. This can be used to programmatically or manually verify data integrity against the Merkle Storage backend.
 
@@ -34,7 +38,7 @@ We make use of REST calls to the [Tierion](https://tierion.com/) blockchain netw
 
 ## Install
 
-    #> composer install phptek/verifiable
+    #> composer require phptek/verifiable
 
 ## Configuration
 
@@ -48,6 +52,8 @@ My\Name\Space\Model\MyModel:
   verifiable_fields:
     - Title
     - Content
+    - Foo
+    - Bar
 
 PhpTek\Verifiable\Verify\VerifiableService:
   # One of: "trillian" or "chainpoint"

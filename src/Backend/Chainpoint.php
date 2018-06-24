@@ -176,7 +176,7 @@ class Chainpoint implements BackendProvider
 
             return $client->$method($url, $payload);
         } catch (RequestException $e) {
-            throw new VerifiableValidationException($e->getMessage());
+            throw new VerifiableValidationException('Upstream network problem.');
         }
     }
 

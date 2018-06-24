@@ -15,7 +15,8 @@ use SilverStripe\ORM\ValidationException;
 
 /**
  * Accepts incoming requests for data verification e.g. from within the CMS
- * or framework's admin area, and sends them on their way.
+ * or framework's admin area, proxies them through {@link VerifiableService} and
+ * sends them on their way.
  *
  * Will proxy validation requests to the currently configured backend for both
  * {@link SiteTree} and {@link DataObject} subclasses.
@@ -24,7 +25,7 @@ use SilverStripe\ORM\ValidationException;
  * of verifiable_fields
  * @todo Rename to "VerifiableController"
  */
-class VerificationController extends Controller
+class VerifiableController extends Controller
 {
     /**
      * No local proof found. Evidence that the record has been tampered-with.
@@ -83,13 +84,6 @@ class VerificationController extends Controller
     const STATUS_UNVERIFIED = 'Unverified';
 
     /**
-     * All local checks passed. Submitted hash is currently pending.
-     *
-     * @var string
-     */
-    const STATUS_PENDING = 'Pending';
-
-    /**
      * Some kind of upstream error.
      *
      * @var string
@@ -138,12 +132,42 @@ class VerificationController extends Controller
             'RecordID' => "$record->RecordID",
             'Version' => "$record->Version",
             'Class' => get_class($record),
-            'Status' => $status,
+            'StatusNice' => $status,
+            'StatusCode' => $this->getCodeMeta($status, 'code'),
+            'StatusDefn' => $this->getCodeMeta($status, 'defn'),
             'SubmittedAt' => $record->dbObject('Proof')->getSubmittedAt(),
             'SubmittedTo' => $record->dbObject('Extra')->getStoreAsArray(),
         ], JSON_UNESCAPED_UNICODE);
 
         $this->renderJSON($response);
+    }
+
+    /**
+     *
+     * @param  string $key
+     * @return mixed
+     */
+    private function getCodeMeta($status, $key)
+    {
+        $refl = new \ReflectionClass(__CLASS__);
+        $const = array_search($status, $refl->getConstants());
+        $keyJson = file_get_contents(realpath(__DIR__) . '/../../statuses.json');
+        $keyMap = json_decode($keyJson, true);
+        $defn = '';
+
+        foreach ($keyMap as $map) {
+            if (isset($map[$const])) {
+                $defn = $map[$const];
+            }
+        }
+
+        $data = [
+            'code' => $const,
+            'defn' => $defn,
+        ];
+
+        return isset($data[$key]) ? $data[$key] : $data;
+
     }
 
     /**
@@ -163,7 +187,6 @@ class VerificationController extends Controller
      * @param  DataObject $record
      * @param  array      $nodes
      * @return string
-     * @todo Add tests
      */
     public function getVerificationStatus($record, $nodes)
     {

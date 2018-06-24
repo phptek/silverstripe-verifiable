@@ -6,7 +6,7 @@ PhpTek\Verifiable\Verify\VerifiableExtension:
   dependencies:
     verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
     
-PhpTek\Verifiable\Controller\VerificationController:
+PhpTek\Verifiable\Controller\VerifiableController:
   dependencies:
     verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
     

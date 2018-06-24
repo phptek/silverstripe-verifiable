@@ -3,6 +3,7 @@
 /**
  * @author  Russell Michell 2018 <russ@theruss.com>
  * @package silverstripe-verifiable
+ * @todo Fix selectedIndex problem of version dropdown
  */
 
 namespace PhpTek\Verifiable\Verify;
@@ -61,6 +62,7 @@ class VerifiableExtension extends DataExtension
      * into a string, hashed and submitted to the current backend.
      *
      * @return void
+     * @todo Implement in onAfterPublish() instead. Minimises HTTP requests to the backend.
      */
     public function onBeforeWrite()
     {
@@ -110,13 +112,11 @@ class VerifiableExtension extends DataExtension
     {
         parent::updateCMSFields($fields);
 
-        Requirements::css('phptek/verifiable: client/verifiable.css');
         Requirements::javascript('phptek/verifiable: client/verifiable.js');
 
         $owner = $this->getOwner();
         $list = [];
         $versions = $owner->Versions()->sort('Version');
-        $keyTable = file_get_contents(realpath(__DIR__) . '/../../doc/statuses.html');
 
         foreach ($versions as $item) {
             $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->Created);
@@ -126,13 +126,13 @@ class VerifiableExtension extends DataExtension
             LiteralField::create('Introduction', '<p class="message">Select a version'
                     . ' whose data you wish to verify, then select the "Verify"'
                     . ' button. After a few seconds, a verification status will be'
-                    . ' displayed. Please refer to the "Status Key" table below to'
-                    . ' interpret the result.</p>'),
+                    . ' displayed.</p>'),
             HiddenField::create('Type', null, get_class($owner)),
             DropdownField::create('Version', 'Version', $list)
                 ->setEmptyString('-- Select One --'),
-                FormAction::create('doVerify', 'Verify'),
-            ToggleCompositeField::create('KeyTable', 'Status Key', LiteralField::create('Foo', $keyTable)),
+            FormAction::create('doVerify', 'Verify')
+                ->setUseButtonTag(true)
+                ->addExtraClass('btn action btn-outline-primary ')
         ]));
     }
 
