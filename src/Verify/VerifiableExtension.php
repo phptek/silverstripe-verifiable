@@ -14,7 +14,9 @@ use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\ToggleCompositeField;
+use SilverStripe\Forms\HiddenField;
 use PhpTek\JSONText\ORM\FieldType\JSONText;
+use SilverStripe\View\Requirements;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass and declaring a
@@ -108,6 +110,9 @@ class VerifiableExtension extends DataExtension
     {
         parent::updateCMSFields($fields);
 
+        Requirements::css('phptek/verifiable: client/verifiable.css');
+        Requirements::javascript('phptek/verifiable: client/verifiable.js');
+
         $owner = $this->getOwner();
         $list = [];
         $versions = $owner->Versions()->sort('Version');
@@ -123,6 +128,7 @@ class VerifiableExtension extends DataExtension
                     . ' button. After a few seconds, a verification status will be'
                     . ' displayed. Please refer to the "Status Key" table below to'
                     . ' interpret the result.</p>'),
+            HiddenField::create('Type', null, get_class($owner)),
             DropdownField::create('Version', 'Version', $list)
                 ->setEmptyString('-- Select One --'),
                 FormAction::create('doVerify', 'Verify'),
