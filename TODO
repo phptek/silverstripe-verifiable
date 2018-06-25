@@ -2,7 +2,6 @@ Handle rate-limiting by the Chainpoint network
 Write a __call() method that sets nodes to the backend once, rather than in each backend method call
 Fix the tight-cpupling that exists between Extension --> Service --> Chainpoint backend
 Hard-code "Created" and "LastEdited" fields into "verifiable_fields"
-Prevent "Proof" field from ever being configured in verifiable_fields
 Use AsyncPHP to make the initial write call to the backend, wait ~15s and then request a proof in return
 Use silverstripe/crontask module to periodically query backends for a full proof
 Rename x2 DB fields declared in VerifiableExtension and prefix with 'v' or 'verifiable'

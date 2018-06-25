@@ -14,7 +14,6 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
-use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\Forms\HiddenField;
 use PhpTek\JSONText\ORM\FieldType\JSONText;
 use SilverStripe\View\Requirements;
@@ -95,6 +94,10 @@ class VerifiableExtension extends DataExtension
         $verifiable = [];
 
         foreach ($fields as $field) {
+            if ($field === 'Proof') {
+                continue;
+            }
+            
             $verifiable[] = (string) $record->getField($field);
         }
 
