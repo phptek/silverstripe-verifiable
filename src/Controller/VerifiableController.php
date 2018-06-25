@@ -213,7 +213,7 @@ class VerifiableController extends Controller
 
         // Remote verification check that local hash_node_id returns a valid response
         // Responds with a binary format proof
-        $responseBinary = $this->verifiableService->read($proof->getHashIdNode());
+        $responseBinary = $this->verifiableService->call('read', $proof->getHashIdNode());
 
         if ($responseBinary === '[]') {
             return self::STATUS_UUID_INVALID;
@@ -223,7 +223,7 @@ class VerifiableController extends Controller
         $responseBinaryProof = ChainpointProof::create()
                 ->setValue($responseBinary)
                 ->getProof();
-        $responseVerify = $this->verifiableService->verify($responseBinaryProof);
+        $responseVerify = $this->verifiableService->call('verify', $responseBinaryProof);
 
         if ($responseVerify === '[]') {
             return self::STATUS_REMOTE_HASH_INVALID_NO_DATA;

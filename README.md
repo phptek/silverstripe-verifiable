@@ -70,6 +70,13 @@ Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's
 * Bitcoin and Ethereum integration via the Tierion Network
 * Google Trillian integration
 
+## Background Reading
+
+* [Trustworthy technology: The future of digital archives](https://blog.nationalarchives.gov.uk/blog/trustworthy-technology-future-digital-archives/)
+
 ## TODO
 
 * What to do about `Versioned::onAfterRollback()` - disallow rolling-back to previous version if it's verifiable (That is: It has populated "Proof" field)?
+
+## License
+

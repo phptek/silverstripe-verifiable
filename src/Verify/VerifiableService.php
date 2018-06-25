@@ -19,8 +19,6 @@ use PhpTek\Verifiable\Backend\BackendProvider;
  * currently selected Merkle Tree storage backend.
  *
  * @todo Handle rate-limiting by the Chainpoint network and by repeated access to this controller
- * @todo Write a __call() method that sets nodes to the backend once, rather than in each backend method call
- * @see https://github.com/chainpoint/chainpoint-node/wiki/Chainpoint-Node-API:-How-to-Create-a-Chainpoint-Proof
  */
 class VerifiableService
 {
@@ -48,17 +46,33 @@ class VerifiableService
     }
 
     /**
+     * Wrapper around all backend methods.
+     *
+     * @param  string $method The name of the method to call
+     * @param  mixed  $arg    The argument to pass to $method
+     * @return mixed
+     * @throws InvalidArgumentException
+     */
+    public function call($method, $arg)
+    {
+        if (!method_exists($this, $method)) {
+            throw new \InvalidArgumentException("$method doesn't exist.");
+        }
+
+        $this->backend->setDiscoveredNodes($this->getExtra());
+
+        return $this->$method($arg);
+    }
+
+    /**
      * Write a hash of data as per the "verifiable_fields" config static on each
      * {@link DataObject}.
      *
      * @param  array $data
      * @return mixed The result of this call to the backend.
      */
-    public function write(array $data)
+    protected function write(array $data)
     {
-        // TODO: Is there a better way of doing this?
-        $this->backend->setDiscoveredNodes($this->getExtra());
-
         return $this->backend->writeHash([$this->hash($data)]);
     }
 
@@ -68,11 +82,8 @@ class VerifiableService
      * @param  string $uuid
      * @return string The JSON-LD chainpoint proof.
      */
-    public function read(string $uuid) : string
+    protected function read(string $uuid) : string
     {
-        // TODO: Is there a better way of doing this?
-        $this->backend->setDiscoveredNodes($this->getExtra());
-
         return $this->backend->getProof($uuid);
     }
 
@@ -82,11 +93,8 @@ class VerifiableService
      * @param  string $proof A JSON-LD chainpoint proof.
      * @return mixed
      */
-    public function verify(string $proof)
+    protected function verify(string $proof)
     {
-        // TODO: Is there a better way of doing this?
-        $this->backend->setDiscoveredNodes($this->getExtra());
-
         return $this->backend->verifyProof($proof);
     }
 

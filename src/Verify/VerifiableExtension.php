@@ -71,7 +71,7 @@ class VerifiableExtension extends DataExtension
         $owner = $this->getOwner();
         $this->verifiableService->setExtra();
 
-        if (count($verifiable) && $proofData = $this->verifiableService->write($verifiable)) {
+        if (count($verifiable) && $proofData = $this->verifiableService->call('write', $verifiable)) {
             if (is_array($proofData)) {
                 $proofData = json_encode($proofData);
             }
@@ -97,7 +97,7 @@ class VerifiableExtension extends DataExtension
             if ($field === 'Proof') {
                 continue;
             }
-            
+
             $verifiable[] = (string) $record->getField($field);
         }
 
