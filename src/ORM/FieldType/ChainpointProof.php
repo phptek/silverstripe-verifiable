@@ -116,7 +116,7 @@ class ChainpointProof extends JSONText
      * @param string $hash
      * @return bool
      */
-    public function match(string $hash)
+    public function match(string $hash) : bool
     {
         return $this->getHash() === $hash;
     }

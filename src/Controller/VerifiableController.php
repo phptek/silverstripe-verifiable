@@ -139,7 +139,9 @@ class VerifiableController extends Controller
     }
 
     /**
+     * Return data used for verifiable statuses.
      *
+     * @param  string $status
      * @param  string $key
      * @return mixed
      */
@@ -162,7 +164,7 @@ class VerifiableController extends Controller
             'defn' => $defn,
         ];
 
-        return isset($data[$key]) ? $data[$key] : $data;
+        return $data[$key] ?? $data;
 
     }
 
