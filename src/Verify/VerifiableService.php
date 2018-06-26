@@ -17,8 +17,6 @@ use PhpTek\Verifiable\Backend\BackendProvider;
 /**
  * Service class that works as an intermediary between any data model and the
  * currently selected Merkle Tree storage backend.
- *
- * @todo Handle rate-limiting by the Chainpoint network and by repeated access to this controller
  */
 class VerifiableService
 {
@@ -38,7 +36,6 @@ class VerifiableService
 
     /**
      * @return void
-     * @throws VerifiableBackendException
      */
     public function __construct()
     {
@@ -99,6 +96,9 @@ class VerifiableService
     }
 
     /**
+     * Set some arbitrary data onto the service. Used as a way of acting as
+     * an intermediary or broker between DataOBjects and the backend.
+     *
      * @param  array $extra
      * @return VerifiableService
      */
@@ -115,6 +115,8 @@ class VerifiableService
     }
 
     /**
+     * Return arbitrary data set to this service.
+     *
      * @return array
      */
     public function getExtra()
@@ -169,7 +171,7 @@ class VerifiableService
     public function hash(array $data) : string
     {
         $func = $this->backend->hashFunc();
-        $text = json_encode($data); // json_encode() to stringify arrays of arbitary depth
+        $text = serialize($data);
 
         return hash($func, $text);
     }

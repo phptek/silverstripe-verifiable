@@ -20,10 +20,6 @@ use SilverStripe\ORM\ValidationException;
  *
  * Will proxy validation requests to the currently configured backend for both
  * {@link SiteTree} and {@link DataObject} subclasses.
- *
- * @todo Take into account LastEdited and Created dates, outside of userland control
- * of verifiable_fields
- * @todo Rename to "VerifiableController"
  */
 class VerifiableController extends Controller
 {
@@ -207,7 +203,7 @@ class VerifiableController extends Controller
         }
 
         // Comparison check between locally stored proof, and re-hashed record data
-        if ($proof->getHash() !== $reHash = $this->verifiableService->hash($record->normaliseData())) {
+        if ($proof->getHash() !== $reHash = $this->verifiableService->hash($record->verify())) {
             return self::STATUS_LOCAL_HASH_INVALID;
         }
 

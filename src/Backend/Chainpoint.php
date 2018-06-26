@@ -20,9 +20,6 @@ use SilverStripe\Core\Injector\Injector;
  *
  * @see https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
  * @see https://chainpoint.org
- * @todo in setDiscoveredNodes()) Instead of throwing an exception, re-call setDiscoveredNodes()
- * which will randomly discover a new URL to use.
- * @todo To help with the above, ensure that the array of returned IPs is sorted randomly.
  */
 class Chainpoint implements BackendProvider
 {
@@ -59,8 +56,6 @@ class Chainpoint implements BackendProvider
      *
      * @param  string $hashIdNode
      * @return string (From GuzzleHttp\Stream::getContents()
-     * @todo Rename to proofs() as per the "gateway" we're calling
-     * @todo modify to accept an array of hashes
      */
     public function getProof(string $hashIdNode) : string
     {
@@ -76,7 +71,6 @@ class Chainpoint implements BackendProvider
      *
      * @param  array $hashes
      * @return string (From GuzzleHttp\Stream::getContents()
-     * @todo Rename to hashes() as per the "gateway" we're calling
      */
     public function writeHash(array $hashes) : string
     {
@@ -115,7 +109,6 @@ class Chainpoint implements BackendProvider
      * @param  array  $networks An array of available blockchains to consult
      * @return bool             Returns true if each blockchain found in $network
      *                          can verify our proof.
-     * @todo   Implement via dedicated classes for each configured blockchain network.
      * @see    https://runkit.com/tierion/verify-a-chainpoint-proof-directly-using-bitcoin
      */
     protected function verifyProofDirect(string $proof, array $networks = [])
@@ -143,8 +136,6 @@ class Chainpoint implements BackendProvider
      * @param  bool     $rel     Is $url relative? If so, pass "base_uri" to {@link Client}.
      * @return Response Guzzle   Response object
      * @throws VerifiableBackendException
-     * @todo Use promises to send concurrent requests: 1). Find a node 2). Pass node URL to second request
-     * @todo Can the "base_uri" Guzzle\Client option accept an array?
      */
     protected function client(string $url, string $verb, array $payload = [], bool $rel = true)
     {
@@ -161,7 +152,7 @@ class Chainpoint implements BackendProvider
         $method = strtolower($verb);
         $config = $this->config()->get('client_config');
         $client = new Client([
-            'base_uri' => $rel ? $this->getDiscoveredNodes()[0] : '',
+            'base_uri' => $rel ? $this->getDiscoveredNodes()[0] : '', // Use a single address only
             'verify' => true,
             'timeout'  => $config['timeout'],
             'connect_timeout'  => $config['connect_timeout'],
@@ -189,7 +180,6 @@ class Chainpoint implements BackendProvider
      * @param  array $usedNodes  Optionally pass some "pre-known" chainpoint nodes
      * @return mixed void | null
      * @throws VerifiableBackendException
-     * @todo Handle exceptions from GuzzleHTTP\Client (e.g. timeout errors from curl).
      */
     public function setDiscoveredNodes($usedNodes = null)
     {

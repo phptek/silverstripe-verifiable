@@ -15,10 +15,6 @@ use PhpTek\JSONText\ORM\FieldType\JSONText;
  *
  * Makes use of the {@link JSONText} package and wraps simple queries around
  * its raw JSONQuery calls.
- *
- * @todo Add support for exporting in MsgPack format (http://msgpack.org/index.html)
- * @todo Create a new JSONText subclass called "VerifiableFields" and use it to store
- * the verifiable_fields originally used to hash this record's data.
  */
 class ChainpointProof extends JSONText
 {

@@ -3,7 +3,6 @@
 /**
  * @author  Russell Michell 2018 <russ@theruss.com>
  * @package silverstripe-verifiable
- * @todo Fix selectedIndex problem of version dropdown
  */
 
 namespace PhpTek\Verifiable\Verify;
@@ -25,15 +24,6 @@ use SilverStripe\View\Requirements;
  *
  * This {@link DataExtension} also provides a single field to which all verified
  * and verifiable chainpoint proofs are stored in a queryable JSON-aware field.
- *
- * @todo Hard-code "Created" and "LastEdited" fields into "verifiable_fields"
- * @todo Prevent "Proof" field from ever being configured in verifiable_fields
- * @todo Use AsyncPHP to make the initial write call to the backend, wait ~15s and then request a proof in return
- * @todo Use crontask module to periodically query backends for a full proof
- * @todo WARNING: Tight coupling between: Extension <=> Service <=> Backend (Node "Discovery" is chainpoint-specific)
- * @todo Rename x2 fields and prefix with 'v' ??
- * @todo Save only the IP octets, no need to save "http(s)?" in the "Extra" field
- * @todo Avoid node-discovery in anywhere _other_ than the CMS / admin UI
  */
 class VerifiableExtension extends DataExtension
 {
@@ -67,7 +57,7 @@ class VerifiableExtension extends DataExtension
     {
         parent::onBeforeWrite();
 
-        $verifiable = $this->normaliseData();
+        $verifiable = $this->verify();
         $owner = $this->getOwner();
         $this->verifiableService->setExtra();
 
@@ -82,23 +72,35 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
-     * Normalise this model's data so it's suited to being hashed.
+     * Call a custom verify() method on all decorated objects, if one exists.
+     * This provides a flexible public API for hashing and verifying pretty much
+     * anything.
+     *
+     * If no verify method exists, the default is to take the values of the YML
+     * config "verifiable_fields" array, then hash and submit the values of those
+     * fields. If no verifiable_fields are found or configured, we just return
+     * an empty array and stop.
      *
      * @param  DataObject $record
      * @return array
      */
-    public function normaliseData($record = null) : array
+    public function verify($record = null) : array
     {
         $record = $record ?: $this->getOwner();
-        $fields = $record->config()->get('verifiable_fields');
         $verifiable = [];
 
-        foreach ($fields as $field) {
-            if ($field === 'Proof') {
-                continue;
-            }
+        if (method_exists($record, 'verify')) {
+            $verifiable = (array) $record->verify();
+        } else {
+            $fields = $record->config()->get('verifiable_fields');
 
-            $verifiable[] = (string) $record->getField($field);
+            foreach ($fields as $field) {
+                if ($field === 'Proof') {
+                    continue;
+                }
+
+                $verifiable[] = (string) $record->getField($field);
+            }
         }
 
         return $verifiable;
@@ -109,7 +111,6 @@ class VerifiableExtension extends DataExtension
      *
      * @param  FieldList $fields
      * @return void
-     * @todo Complete a basic CMS UI
      */
     public function updateCMSFields(FieldList $fields)
     {
