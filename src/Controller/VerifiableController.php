@@ -205,7 +205,7 @@ class VerifiableController extends Controller
         }
 
         // Comparison check between locally stored proof, and re-hashed record data
-        if ($proof->getHash() !== $reHash = $this->verifiableService->hash($record->verify())) {
+        if ($proof->getHash() !== $reHash = $this->verifiableService->hash($record->source())) {
             return self::STATUS_LOCAL_HASH_INVALID;
         }
 

@@ -57,7 +57,7 @@ class VerifiableExtension extends DataExtension
     {
         parent::onBeforeWrite();
 
-        $verifiable = $this->verify();
+        $verifiable = $this->source();
         $owner = $this->getOwner();
         $this->verifiableService->setExtra();
 
@@ -72,19 +72,20 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
-     * Call a custom verify() method on all decorated objects, if one exists.
+     * Source the data that will end-up hashed and submitted. This method will
+     * call a custom verify() method on all decorated objects, if one is defined.
      * This provides a flexible public API for hashing and verifying pretty much
      * anything.
      *
-     * If no verify method exists, the default is to take the values of the YML
+     * If no such method exists, the default is to take the values of the YML
      * config "verifiable_fields" array, then hash and submit the values of those
      * fields. If no verifiable_fields are found or configured, we just return
-     * an empty array and stop.
+     * an empty array and just stop.
      *
      * @param  DataObject $record
      * @return array
      */
-    public function verify($record = null) : array
+    public function source($record = null) : array
     {
         $record = $record ?: $this->getOwner();
         $verifiable = [];
