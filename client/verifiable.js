@@ -7,8 +7,7 @@
 
 (function($) {
     $(document).ready(function($) {
-        let $root = $('#Root_Verify');
-        let version = $('select[name="Version"]').val();
+        let version = $('select[name="Version"] option:selected').val();
         
         $('select[name="Version"]').entwine({
             onchange: function() {
@@ -16,9 +15,10 @@
             }
         });
         
-        $root.entwine({
+        $('.cms-edit-form').entwine({
             
             onmatch: function() {
+                let $root = $('#Root_Verify');
                 let urlArray = $('#tab-Root_Verify').attr('href').split('#')[0].split('/');
                 let type = $('input[name="Type"]').val();                
                 let id = urlArray[urlArray.length -1];
