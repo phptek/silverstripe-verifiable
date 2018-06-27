@@ -80,6 +80,13 @@ class VerifiableController extends Controller
     const STATUS_UNVERIFIED = 'Unverified';
 
     /**
+     * All checks passed. The local proof has been validated, but is not yet confirmed.
+     *
+     * @var string
+     */
+    const STATUS_PENDING = 'Pending';
+
+    /**
      * Some kind of upstream error.
      *
      * @var string
@@ -235,6 +242,10 @@ class VerifiableController extends Controller
         }
 
         if ($responseProof->getStatus() === 'verified') {
+            if (!$responseProof->isComplete()) {
+                return self::STATUS_PENDING;
+            }
+
             return self::STATUS_VERIFIED;
         }
 

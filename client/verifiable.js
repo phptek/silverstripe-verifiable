@@ -35,10 +35,10 @@
                     
                     $.get(controllerUrl)
                         .done(function(data) {
-                            var message = '<strong>' + data.StatusNice + '!</strong> ' + data.StatusDefn,
-                                cssClass = data.StatusCode !== 'STATUS_VERIFIED' ? 'bad' : 'good';
+                            var message = '<strong>' + data.StatusNice + '</strong> ' + data.StatusDefn,
+                                cssClass = data.StatusCode === 'STATUS_VERIFIED' || data.StatusCode === 'STATUS_PENDING' ? 'good' : 'bad';
                                 
-                            $root.prepend($('<p class="message v-status ' + cssClass + '">' + message + '.</p>'));
+                            $root.prepend($('<p class="message v-status ' + cssClass + '">' + message + '</p>'));
                             $button
                                 .addClass('font-icon-tick')
                                 .removeClass('btn--loading loading');
@@ -46,7 +46,12 @@
                             $('.btn__loading-icon').remove();
                         })
                         .fail(function() {
-                            $root.prepend($('<p class="message v-status bad">Verification request failed. A connection problem meant that this request could not be processed.</p>'));
+                            var msg = '<p class="message v-status bad">';
+                            msg += '<strong>Request Failed</strong> A connection problem';
+                            msg += ' meant that this request could not be processed.';
+                            msg += ' Please try again in a moment';
+                            msg += '</p>';
+                            $root.prepend($(msg));
                             $button
                                 .addClass('font-icon-cross')
                                 .removeClass('btn--loading loading');
