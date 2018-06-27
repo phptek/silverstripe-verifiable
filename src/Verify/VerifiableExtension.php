@@ -18,9 +18,15 @@ use PhpTek\JSONText\ORM\FieldType\JSONText;
 use SilverStripe\View\Requirements;
 
 /**
- * By attaching this extension to any {@link DataObject} subclass and declaring a
- * $verifiable_fields array in YML config, all subsequent database writes will
- * be passed through here via {@link $this->onBeforeWrite()};
+ * By attaching this extension to any {@link DataObject} subclass, it will therefore
+ * be "verifiable aware". Declaring a `verify()` method on it, will automatically
+ * make whatever the method returns, into that which is hashed and anchored to
+ * the backend.
+ *
+ * If no `verify()` method is detected, the fallback is to assume that selected
+ * fields on your data model should be combined and hashed. For this to work,
+ * declare a `verifiable_fields` array in YML config. All subsequent publish actions
+ * will be passed through here via {@link $this->onBeforeWrite()}.
  *
  * This {@link DataExtension} also provides a single field to which all verified
  * and verifiable chainpoint proofs are stored in a queryable JSON-aware field.
@@ -60,8 +66,9 @@ class VerifiableExtension extends DataExtension
         $verifiable = $this->source();
         $owner = $this->getOwner();
         $this->verifiableService->setExtra();
+        $doAnchor = (count($verifiable) && $owner->exists());
 
-        if (count($verifiable) && $proofData = $this->verifiableService->call('write', $verifiable)) {
+        if ($doAnchor && $proofData = $this->verifiableService->call('write', $verifiable)) {
             if (is_array($proofData)) {
                 $proofData = json_encode($proofData);
             }
