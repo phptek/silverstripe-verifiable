@@ -24,15 +24,7 @@ At time of writing, the two service classifications we are aware of that fit the
 
 ## Blockchain
 
-For a more public and visible means of verifiability, we make use of both the [Bitcoin](https://bitcoin.org/) and [Ethereum](https://ethereum.org) blockchain networks. In addition to storing value-based transactions in their native cryptocurrencies, these blockchains are also capable of storing arbitrary strings, making them ideal for storing Merkle Root hashes from which individual "leaf" hashes of data can be mathematically derived.
-
-We make use of REST calls to the [Tierion](https://tierion.com/) blockchain network, which itself writes hashed data to both Bitcoin and Ethereum on a periodic basis.
-
-## Trillian
-
-Incomplete support.
-
-[Trillian](https://github.com/google/trillian/) is an OSS project from Google that provides a complimentary verification service to some data-store (SilverStripe's database for example) by means of a Merkle Tree. With this backend enabled in the module's YML config, fields on your `DataObject` subclasses can be hashed and stored as leaf nodes in Trillian itself, where the backend is known in Trillan-speak as a ["Personality"](https://github.com/google/trillian/#personalities). 
+In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing (limited size) arbitrary data, making them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. We make use of REST calls to the [Tierion](https://tierion.com/) blockchain network using its [Chainpoint](https://chainpoint.org) service. Tierion is itself a permissionless blockchain network which itself periodically writes hashed data to both Bitcoin and Ethereum. 
 
 ## Install
 
@@ -65,11 +57,17 @@ My\Name\Space\Model\MyModel:
     - Content
 ```
 
-But the power of this module comes with giving developers the ability to supply their own data. Simply declare a `verify()` method on any decorated `DataObject` subclass.
-This can return an array of values or a simple scalar to be hashed. The data is then submitted to the backend on every write (Publish?).
-
 Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.
+
+You'll need to install a simple cron job on your hosting environment, to invoke the `FullProofFetchTask` which does the job of periodically querying the backend for a full-proof (Chainpoint backend only).
+
+    /path/to/docroot/vendor/silverstripe/framework/cli-script.php dev/cron quiet=1
+
+### Advanced
+
+The true power of this module comes with giving developers the ability to supply their own data. Simply declare a `verify()` method on any decorated `DataObject` subclass, and its return value is what becomes hashed and submitted to the backend.
 
 ## Background Reading
 
 * [Trustworthy technology: The future of digital archives](https://blog.nationalarchives.gov.uk/blog/trustworthy-technology-future-digital-archives/)
+* [Xero Integrates With Tierion To Secure Accounting Data Using Chainpoint](https://blog.tierion.com/2018/04/19/xero-integrates-with-tierion-to-secure-accounting-data-using-chainpoint/)

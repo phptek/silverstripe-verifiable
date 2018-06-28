@@ -76,11 +76,15 @@ class VerifiableService
     /**
      * Fetch a chainpoint proof for the passed $uuid.
      *
-     * @param  string $uuid
+     * @param  mixed string | array $uuid
      * @return string The JSON-LD chainpoint proof.
      */
-    protected function read(string $uuid) : string
+    protected function read($uuid) : string
     {
+        if (is_array($uuid)) {
+            return $this->backend->getProofs($uuid);
+        }
+
         return $this->backend->getProof($uuid);
     }
 
@@ -171,7 +175,7 @@ class VerifiableService
     public function hash(array $data) : string
     {
         $func = $this->backend->hashFunc();
-        $text = serialize($data);
+        $text = json_encode($data, true);
 
         return hash($func, $text);
     }

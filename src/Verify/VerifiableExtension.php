@@ -45,7 +45,8 @@ class VerifiableExtension extends DataExtension
     ];
 
     /**
-     * The field-values that will be hashed and committed to the current backend.
+     * When no `verify()` method is found on decorated objects, this is the list
+     * of fields who's values will be hashed and committed to the current backend.
      *
      * @var array
      * @config

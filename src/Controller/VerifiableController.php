@@ -49,7 +49,7 @@ class VerifiableController extends Controller
      *
      * @var string
      */
-    const STATUS_REMOTE_HASH_INVALID_NO_DATA = 'Remote Hash Not Found';
+    const STATUS_REMOTE_HASH_INVALID_NO_DATA = 'Remote Hash No Data';
 
     /**
      * Invalid remote hash found. Evidence that the record has been tampered-with.
@@ -205,8 +205,6 @@ class VerifiableController extends Controller
         }
 
         // Basic proof validity check
-        // @todo Beef this up to ensure that a basic regex is run over each to ensure it's all
-        // not just gobbledygook
         if (!$proof->getHashIdNode() || !$proof->getHash() || !$proof->getSubmittedAt()) {
             return self::STATUS_LOCAL_PROOF_INVALID;
         }
@@ -242,11 +240,13 @@ class VerifiableController extends Controller
         }
 
         if ($responseProof->getStatus() === 'verified') {
-            if (!$responseProof->isComplete()) {
+            if ($responseProof->isPartial()) {
                 return self::STATUS_PENDING;
             }
 
-            return self::STATUS_VERIFIED;
+            if ($responseProof->isComplete()) {
+                return self::STATUS_VERIFIED;
+            }
         }
 
         return self::STATUS_UNVERIFIED;

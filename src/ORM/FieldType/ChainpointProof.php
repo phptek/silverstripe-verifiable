@@ -132,11 +132,7 @@ class ChainpointProof extends JSONText
     {
         $data = $data ?? $this->getStoreAsArray();
 
-        if (isset($data['anchors_complete']) && count($data['anchors_complete']) === 0) {
-            return false;
-        }
-
-        return true;
+        return isset($data['anchors']) && count($data['anchors']) <= 1;
     }
 
     /**
@@ -149,13 +145,36 @@ class ChainpointProof extends JSONText
     public function isComplete($input = null) : bool
     {
         $data = $data ?? $this->getStoreAsArray();
+        $valid = 0;
 
-        if (empty($data['anchors_complete']) || empty($data['anchors'])) {
-            return false;
+        // There can be two types of proof:
+        // The "binary" kind, as returned from chainpoint.org's /verify endpoint
+        // The "full" proof, as returned from chainpoint.org's /proofs endpoint
+        $isFull = isset($data[0]['proof']);
+
+        if ($isFull) {
+            if (!empty($data[0]['proof']['branches'])) {
+                // Calendar
+                if (!empty($end = end($data[0]['proof']['branches'][0]['ops'])['anchors'][0]['anchor_id'])) {
+                    $valid++;
+                }
+                // Bitcoin
+                if (!empty($end = end($data[0]['proof']['branches'][0]['branches'][0]['ops'])['anchors'][0]['anchor_id'])) {
+                    $valid++;
+                }
+            }
+        } else {
+            if (!empty($data[0]['anchors']) && count($data[0]['anchors']) >= 2) {
+                foreach ($data[0]['anchors'] as $anchor) {
+                    if (isset($anchor['valid']) && $anchor['valid'] === true) {
+                        $valid++;
+                    }
+                }
+            }
         }
 
-        // "Full" means anchors to both Etheruem and Bitcoin blockchains
-        return count($data['anchors']) === 3; // "cal" + "btc" + "eth"
+        // "Full" means anchors to at least Tierion's internal "Calendar" and Bitcoin blockchains
+        return $valid >= 2;
     }
 
 }

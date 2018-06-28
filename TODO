@@ -30,3 +30,6 @@
 * Implement a backend for connecting directly to a local Bitcoind and Geth full node
 * Remove dependency on silverstripe/cms. Should only need to depend on silverstripe/versioned
 * Display selected version's proof, hash, UUID and Bitcoin TXID in the UI after a verification request
+* Only submit changes to the backend:
+	- On publish
+	- [DONE] When the object exists()

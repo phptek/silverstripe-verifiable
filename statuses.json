@@ -6,7 +6,7 @@
     {"STATUS_LOCAL_PROOF_NONE":"No proof was found in the database. Possibly evidence that the record has been tampered-with."},
     {"STATUS_LOCAL_PROOF_INVALID":"An invalid local proof was found. Evidence that the record has been tampered-with."},
     {"STATUS_LOCAL_HASH_INVALID":"An invalid local hash was found. Evidence that the record has been tampered-with."},
-    {"STATUS_REMOTE_HASH_INVALID_NO_DATA":"No remote hash was found. Evidence that the record has been tampered-with."},
+    {"STATUS_REMOTE_HASH_INVALID_NO_DATA":"No remote hash was found. Depending on the age of the version, this could be because the hash has not reached the backend yet. Otherwise, it may be evidence that the record has been tampered-with."},
     {"STATUS_REMOTE_HASH_INVALID_NO_HASH":"An invalid remote hash found. Evidence that the record has been tampered-with."},
     {"STATUS_UUID_INVALID":"An invalid UUID was sent for verification. Evidence that the record has been tampered-with."},
     {"STATUS_PENDING":"The proof has been validated but has not yet been confirmed. Wait an hour or so after publishing and then re-verify."}

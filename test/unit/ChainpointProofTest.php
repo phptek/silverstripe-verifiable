@@ -61,4 +61,17 @@ class ChainpointProofTest extends SapphireTest
         $this->assertFalse($proofField->match('61d8759d9de000cd7fd4abef8d95ee9f2571bc8b953f8efbba21b110e1bbf0e'));
     }
 
+    public function testIsComplete()
+    {
+//        $proofIncompleteOneValid = file_get_contents(realpath(__DIR__) . '/../fixture/proof-incomplete-single-valid.json');
+//        $proofField = ChainpointProof::create()->setValue($proofIncompleteOneValid);
+//
+//        $this->assertFalse($proofField->isComplete());
+
+        $proofCompleteDualValid = file_get_contents(realpath(__DIR__) . '/../fixture/proof-complete-dual-valid.json');
+        $proofField = ChainpointProof::create()->setValue($proofCompleteDualValid);
+
+        $this->assertTrue($proofField->isComplete());
+    }
+
 }
