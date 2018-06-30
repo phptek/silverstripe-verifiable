@@ -19,7 +19,7 @@ Without any specialist configuration; by default, the module offers a simple CMS
 
 ## How does it work?
 
-With the most basic configuration; on each page-write, a sha256 hash of selected field-data is created and submitted to a 3rd party backend that implements a [Merkle or Binary Hash Tree)](https://en.wikipedia.org/wiki/Merkle_tree.
+With the most basic configuration; on each page-write, a sha256 hash of selected field-data is created and submitted to a 3rd party backend that implements a [Merkle or Binary Hash Tree)](https://en.wikipedia.org/wiki/Merkle_tree). The true power of this module however, comes with giving developers the ability to supply their own data to be hashed and submitted. All developers need to is declare a `verify()` method on any decorated `DataObject` subclass, and the module will call that on every write. Uses of this method might be to notarise uploaded `File` objects or use SilverStripe to become the next [NewsDiffs](https://newsdiffs.org/). See the configuration section below. 
 
 The two service classifications that fit the bill are; public blockchains (notably Bitcoin’s and Ethereum’s) and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
 
@@ -58,7 +58,7 @@ My\Name\Space\Model\MyModel:
     - Content
 ```
 
-The true power of this module comes with giving developers the ability to supply their own data to be hashed and submitted. Developers simply declare a `verify()` method on any `DataObject` subclass that is decorated with `VerifiableExtension`, and its return value will be hashed and submitted to the backend. E.g:
+You can supply your own data to be hashed and submitted. Developers simply declare a `verify()` method on any `DataObject` subclass that is decorated with `VerifiableExtension`, and its return value will be hashed and submitted to the backend. E.g:
 
 ```PHP
 class MyDataObject extends DataObject
