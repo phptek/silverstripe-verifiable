@@ -6,6 +6,10 @@
 
 ## What is this?
 
+A content verification module for SilverStripe applications. It gives content authors and business owners the ability to verify the integrity of their data at any point in time; Data entered by an author can be verified independently.
+
+## Background
+
 For decades software users have taken it for granted that their application's data is safe from tampering. That developers, vendors and DBA's are somehow above changing things, whether they meant to or not. Simply put: We have have put our faith in these entities for no real reason other than they probably sounded like they knew what they were doing.
 
 Because no I.T. system can claim _immutability_, this module therefore offers _verifiability_; data who's integrity is mathematically provable at any point in time. If some data were to change when it wasn’t supposed to, then those that need to know, can be in the know. 
@@ -13,17 +17,13 @@ Because no I.T. system can claim _immutability_, this module therefore offers _v
 Of course; the identification of unwarranted behaviour and negative outcomes is not the only application of verifiability. Verifiability is actually more concerned with _transparency_,
 especially in the context of public data.
 
-This is a module for SilverStripe applications. It gives content authors and business owners the ability to verify the integrity of their data at any point in time; Data entered by an author can be verified independently.
-
 Without any specialist configuration; by default, the module offers a simple CMS interface that allows the content of a specific version of any page, to be verified as not having changed since it was published.
 
 ## How does it work?
 
-With the most basic configuration; on each page-write, a sha256 hash of selected field-data is created and submitted to a 3rd party backend that implements a [Merkle or Binary Hash Tree)](https://en.wikipedia.org/wiki/Merkle_tree). The true power of this module however, comes with giving developers the ability to supply their own data to be hashed and submitted. All developers need to is declare a `verify()` method on any decorated `DataObject` subclass, and the module will call that on every write. Uses of this method might be to notarise uploaded `File` objects or use SilverStripe to become the next [NewsDiffs](https://newsdiffs.org/). See the configuration section below. 
+With the most basic configuration; on each page-write, a sha256 hash of selected field-data is created and submitted to a 3rd party backend that implements a [Merkle or Binary Hash Tree](https://en.wikipedia.org/wiki/Merkle_tree). The true power of this module however, comes with giving developers the ability to supply their own data to be hashed and submitted. All developers need to is declare a `verify()` method on any decorated `DataObject` subclass, and the module will call that on every write. Uses of this method might be to notarise uploaded `File` objects or use SilverStripe to become the next [NewsDiffs](https://newsdiffs.org/). See the configuration section below. 
 
 The two service classifications that fit the bill are; public blockchains (notably Bitcoin’s and Ethereum’s) and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
-
-### Blockchain Storage
 
 In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing limited-sized arbitrary data, making them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. We make use of REST calls to the [Tierion](https://tierion.com/) blockchain network using its [Chainpoint](https://chainpoint.org) service. Tierion is itself a permissionless blockchain network which will periodically write Merkle Root hashes to both Bitcoin and Ethereum.
 
@@ -83,7 +83,7 @@ Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's
 
 You'll also need to install a simple cron job on your hosting environment which invokes the `FullProofFetchTask`. This will do the job of periodically querying the backend for a full-proof (Chainpoint backend only).
 
-    /path/to/docroot/vendor/silverstripe/framework/cli-script.php dev/cron quiet=1
+    ./vendor/bin/sake dev/cron quiet=1
 
 ## Background Reading
 
