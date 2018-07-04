@@ -55,7 +55,7 @@ class Chainpoint implements BackendProvider
      * GETs to the: "/proofs" REST API endpoint.
      *
      * @param  string $hashIdNode
-     * @return string (From GuzzleHttp\Stream::getContents()
+     * @return string A v3 ChainpointProof
      */
     public function getProof(string $hashIdNode) : string
     {
@@ -83,7 +83,7 @@ class Chainpoint implements BackendProvider
      * Submit a chainpoint proof to the backend for verification.
      *
      * @param  string $proof A partial or full JSON string, originally received from,
-     *                       or generated on behalf of, a backend.
+     *                       or generated on behalf of a backend.
      * @return string
      * @todo See the returned proof's "uris" key, to be able to call a specific URI for proof verification.
      */
@@ -167,7 +167,7 @@ class Chainpoint implements BackendProvider
 
             return $client->$method($url, $payload);
         } catch (RequestException $e) {
-            throw new VerifiableValidationException('Upstream network problem.');
+            throw new VerifiableValidationException(sprintf('Upstream network problem: %s', $e->getMessage()));
         }
     }
 

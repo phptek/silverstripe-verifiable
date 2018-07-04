@@ -82,7 +82,7 @@ class VerifiableService
     protected function read($uuid) : string
     {
         if (is_array($uuid)) {
-            return $this->backend->getProofs($uuid);
+            return $this->backend->getProofs(array_unique($uuid));
         }
 
         return $this->backend->getProof($uuid);

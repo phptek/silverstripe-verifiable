@@ -1,0 +1,13 @@
+{
+	"meta": {
+		"submitted_at": "2018-06-30T02:07:56Z",
+		"processing_hints": {
+			"cal": "2018-06-30T02:08:11Z",
+			"btc": "2018-06-30T03:08:56Z"
+		}
+	},
+	"hashes": [{
+		"hash_id_node": "67e70270-7c0a-11e8-8fef-0105a8ad42dd",
+		"hash": "af0c70d03b6427d744e46b820a09db704709852bd4614735efc1394160158ba2"
+	}]
+}

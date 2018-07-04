@@ -1,0 +1,18 @@
+[
+  {
+    "proof_index": 0,
+    "hash": "112233ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab11",
+    "hash_id_node": "3bce9920-4ed7-11e7-a7d0-3d6269e334e8",
+    "hash_submitted_node_at": "2017-06-11T18:53:18Z",
+    "hash_id_core": "3bce9920-4ed7-11e7-a7d0-3d6269e334e8",
+    "hash_submitted_core_at": "2017-06-11T18:53:18Z",
+    "anchors": [
+      {
+        "branch": "cal_anchor_branch",
+        "type": "cal",
+        "valid": true
+      }
+    ],
+    "status": "verified"
+  }
+]

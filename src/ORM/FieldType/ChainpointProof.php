@@ -20,22 +20,35 @@ class ChainpointProof extends JSONText
 {
 
     /**
+     * @var int
+     */
+    const MODEL_TYPE_PHR = 1; // PostHashResponse
+
+    /**
+     * @var int
+     */
+    const MODEL_TYPE_GPR = 2; // GetProofsResponse
+
+    /**
+     * @var int
+     */
+    const MODEL_TYPE_PVR = 3; // PostVerifyResponse
+
+    /**
      * Returns the generated value of the proof's "hash_id_node" key. This is used
      * as a UUID for proofs.
      *
-     * @return string
+     * @return array
      */
-    public function getHashIdNode() : string
+    public function getHashIdNode() : array
     {
         $this->setReturnType('array');
 
-        $field = 'hash_id_node';
-
-        if (!empty($value = $this->query('->>', $field))) {
-            return $value[$field];
+        if (!empty($value = $this->query('$..hash_id_node'))) {
+            return $value;
         }
 
-        return '';
+        return [];
     }
 
     /**
@@ -83,25 +96,15 @@ class ChainpointProof extends JSONText
     {
         $this->setReturnType('array');
 
+        // PostHashResponse
         $field = 'submitted_at';
 
         if (!empty($value = $this->query('->>', $field))) {
             return $value[$field];
         }
 
-        return '';
-    }
-
-    /**
-     * Returns the generated value of the proof's "proof" key.
-     *
-     * @return string
-     */
-    public function getProof() : string
-    {
-        $this->setReturnType('array');
-
-        $field = 'proof';
+        // PostVerifyResponse
+        $field = 'hash_submitted_node_at';
 
         if (!empty($value = $this->query('->>', $field))) {
             return $value[$field];
@@ -111,70 +114,97 @@ class ChainpointProof extends JSONText
     }
 
     /**
-     * Attempts to match a hash against a locally stored proof.
+     * Returns all the "anchor" objects for the currently stored proof.
      *
-     * @param string $hash
-     * @return bool
-     */
-    public function match(string $hash) : bool
-    {
-        return $this->getHash() === $hash;
-    }
-
-    /**
-     * Does the passed data response represent a PARTIAL verification as far as
-     * the local database is concerned?
+     * Example return value:
      *
-     * @param  mixed $input
-     * @return bool
-     */
-    public function isPartial($input = null) : bool
-    {
-        $data = $data ?? $this->getStoreAsArray();
-
-        return isset($data['anchors']) && count($data['anchors']) <= 1;
-    }
-
-    /**
-     * Does the passed data represent a FULL verification as far as the local database
-     * is concerned?
+     * <code>
+     * ["anchors"]=>
+     * array(1) {
+     * [0]=>
+     *  array(3) {
+     *    ["branch"]=>
+     *    string(17) "cal_anchor_branch"
+     *    ["type"]=>
+     *    string(3) "cal"
+     *    ["valid"]=>
+     *    bool(true)
+     *  }
+     * }
+     * </code>
      *
-     * @param  mixed $input
-     * @return bool
+     * @return array
      */
-    public function isComplete($input = null) : bool
+    public function getAnchors() : array
     {
-        $data = $data ?? $this->getStoreAsArray();
-        $valid = 0;
+        $this->setReturnType('array');
 
-        // There can be two types of proof:
-        // The "binary" kind, as returned from chainpoint.org's /verify endpoint
-        // The "full" proof, as returned from chainpoint.org's /proofs endpoint
-        $isFull = isset($data[0]['proof']);
-
-        if ($isFull) {
-            if (!empty($data[0]['proof']['branches'])) {
-                // Calendar
-                if (!empty($end = end($data[0]['proof']['branches'][0]['ops'])['anchors'][0]['anchor_id'])) {
-                    $valid++;
-                }
-                // Bitcoin
-                if (!empty($end = end($data[0]['proof']['branches'][0]['branches'][0]['ops'])['anchors'][0]['anchor_id'])) {
-                    $valid++;
-                }
-            }
-        } else {
-            if (!empty($data[0]['anchors']) && count($data[0]['anchors']) >= 2) {
-                foreach ($data[0]['anchors'] as $anchor) {
-                    if (isset($anchor['valid']) && $anchor['valid'] === true) {
-                        $valid++;
-                    }
-                }
-            }
+        if (!empty($value = $this->query('$..anchors'))) {
+            return $value;
         }
 
-        // "Full" means anchors to at least Tierion's internal "Calendar" and Bitcoin blockchains
-        return $valid >= 2;
+        return [];
+    }
+
+    /**
+     * Returns the type of Proof model we currently have. For a full list of the types
+     * and the REST requests made, for which are returned; refer to the SwaggerHub docs:
+     * https://app.swaggerhub.com/apis/chainpoint/node/1.0.0#/hashes/post_hashes.
+     *
+     * @return int
+     */
+    public function getModelType() : int
+    {
+        $data = $data ?? $this->getStoreAsArray();
+
+        switch (true) {
+            case !empty($data[0]['meta']):
+                return self::MODEL_TYPE_PHR;
+            case !empty($data[0]['proof']):
+                return self::MODEL_TYPE_GPR;
+            case !empty($data[0]['proof_index']):
+                return self::MODEL_TYPE_PVR;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * Does the proof's data represent a FULL verification as far as the local database
+     * is concerned?
+     *
+     * @return bool
+     */
+    public function isFull() : bool
+    {
+        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchors()) >= 2;
+    }
+
+    /**
+     * Does the proof's data represent a PARTIAL verification as far as the local database
+     * is concerned?
+     *
+     * @return bool
+     */
+    public function isPending() : bool
+    {
+        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchors()) === 1;
+    }
+
+    /**
+     * Is this full proof verified? A verified proof is one that is confirmed on
+     * Tierion's ("calendar") blockchain, and at least one other e.g. Bitcoin.
+     *
+     * @return bool
+     * @todo If a full-proof contains >1 "anchors" block, what is the value of 'status'?
+     */
+    public function isVerified() : bool
+    {
+        if (!$this->isFull() || count($this->getAnchors()) <= 1) {
+            return false;
+        }
+
+        return $this->getStatus() === 'verified';
     }
 
 }
