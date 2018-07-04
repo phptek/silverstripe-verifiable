@@ -27,6 +27,10 @@ The two service classifications that fit the bill are; public blockchains (notab
 
 In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing limited-sized arbitrary data, making them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. We make use of REST calls to the [Tierion](https://tierion.com/) blockchain network using its [Chainpoint](https://chainpoint.org) service. Tierion is itself a permissionless blockchain network which will periodically write Merkle Root hashes to both Bitcoin and Ethereum.
 
+## Requirements
+
+At least PHP7 and SilverStripe 4.
+
 ## Install
 
     #> composer require phptek/verifiable
