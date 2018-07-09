@@ -158,7 +158,7 @@ class ChainpointProof extends JSONText
         $data = $data ?? $this->getStoreAsArray();
 
         switch (true) {
-            case !empty($data[0]['meta']):
+            case !empty($data['meta']):
                 return self::MODEL_TYPE_PHR;
             case !empty($data[0]['proof']):
                 return self::MODEL_TYPE_GPR;
@@ -167,6 +167,17 @@ class ChainpointProof extends JSONText
             default:
                 return 0;
         }
+    }
+
+    /**
+     * Does the proof's data represent an INITIAL proof? The type we get straight
+     * from a request to the /hashes endpoint?
+     *
+     * @return bool
+     */
+    public function isInitial() : bool
+    {
+        return $this->getModelType() === self::MODEL_TYPE_PHR;
     }
 
     /**

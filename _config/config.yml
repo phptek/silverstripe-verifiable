@@ -10,3 +10,7 @@ PhpTek\Verifiable\Controller\VerifiableController:
   dependencies:
     verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
     
+PhpTek\Verifiable\Cron\ChainpointFullProofTask:
+  dependencies:
+    verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
+    
