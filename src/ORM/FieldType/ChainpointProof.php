@@ -138,8 +138,9 @@ class ChainpointProof extends JSONText
     public function getAnchors() : array
     {
         $this->setReturnType('array');
+        $value = $this->query('$..anchors');
 
-        if (!empty($value = $this->query('$..anchors'))) {
+        if (!empty($value)) {
             return $value;
         }
 

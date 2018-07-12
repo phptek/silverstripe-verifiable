@@ -1,6 +1,6 @@
 [
     {"STATUS_VERIFIED":"All checks passed. This version's hash and proof are intact and verified."},
-    {"STATUS_UNVERIFIED":"This version is unverified. If this state persists, something is not working correctly. Please consult a developer."},
+    {"STATUS_UNVERIFIED":"This version is unverified. If this state persists, something is not working correctly. Please consult your developer."},
     {"STATUS_PENDING":"This version's hash confirmation is currently pending. If it's been more than two hours since submission, try again."},
     {"STATUS_UPSTREAM_ERROR":"The verification process encountered a network error communicating with the backend. Try again in a moment."},
     {"STATUS_LOCAL_PROOF_NONE":"No local proof was found for this version. If this is the first version, you can safely ignore this message. Otherwise, this is evidence that this version has been tampered-with."},

@@ -25,7 +25,7 @@
                 
                 $('button[name="action_doVerify"]').on('click', function() {                    
                     let $button = $(this);
-                    let controllerUrl = '/verifiable/verifyhash/' + type + '/' + id + '/' + version;
+                    let controllerUrl = 'verifiable/verifyhash/' + type + '/' + id + '/' + version;
                     
                     $button
                         .addClass('btn--loading loading')

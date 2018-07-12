@@ -10,7 +10,6 @@ namespace PhpTek\Verifiable\Controller;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Versioned\Versioned;
-use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 use SilverStripe\ORM\ValidationException;
 
 /**
@@ -57,7 +56,7 @@ class VerifiableController extends Controller
 
     /**
      * This version is unverified. If this state persists, something is not working
-     * correctly. Please consult a developer.
+     * correctly. Please consult your developer.
      *
      * @var string
      */
