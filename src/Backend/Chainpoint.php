@@ -152,7 +152,7 @@ class Chainpoint implements BackendProvider
         $method = strtolower($verb);
         $config = $this->config()->get('client_config');
         $client = new Client([
-            'base_uri' => $rel ? $this->getDiscoveredNodes()[0] : '', // Use a single address only
+         //   'base_uri' => $rel ? $this->getDiscoveredNodes()[0] : '', // Use a single address only
             'verify' => true,
             'timeout'  => $config['timeout'],
             'connect_timeout'  => $config['connect_timeout'],
@@ -163,6 +163,11 @@ class Chainpoint implements BackendProvider
             // json_encodes POSTed data and sends correct Content-Type header
             if ($payload && $verb === 'POST') {
                 $payload['json'] = $payload;
+            }
+
+
+            if ($rel) {
+                $url = ($rel ? $this->getDiscoveredNodes()[0] : '')  . $url;
             }
 
             return $client->$method($url, $payload);
