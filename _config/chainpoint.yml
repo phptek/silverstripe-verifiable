@@ -5,7 +5,7 @@ Name: verifiable-chainpoint-backend-config
 PhpTek\Verifiable\Backend\Chainpoint:
   client_config:
     timeout: 30
-    connect_timeout: 10
+    connect_timeout: 30
   chainpoint_urls:
     - https://a.chainpoint.org/nodes/random/
     - https://b.chainpoint.org/nodes/random/

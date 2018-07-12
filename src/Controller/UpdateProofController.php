@@ -17,16 +17,23 @@ use SilverStripe\Control\Director;
 use SilverStripe\Versioned\Versioned;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 use PhpTek\Verifiable\Verify\VerifiableExtension;
+use PhpTek\Verifiable\Exception\VerifiableValidationException;
 
 /**
- * Controller available to CLI or AJAX for updating all or selected versions.
+ * Controller available to CLI or XHR requests for updating all or selected versionable
+ * object versions with full-proofs.
  *
  * @todo Check with Tierion API docs: How many nodes should be submitted to? And why if I submit to only one, does the network not synchronise it?
  * @todo Update logic to write hashes to all 3 nodes, not just the first as-is the case in the client() method.
+ * @todo Only fetch versions that have unique proof values
+ * @todo Call this controller from admin UI for pending verification statuses
+ * @todo Declare a custom Monolog\Formatter\FormatterInterface and refactor log()
  */
 class UpdateProofController extends Controller
 {
     /**
+     * Entry point.
+     *
      * @param  HTTPRequest $request
      * @throws Exception
      */
@@ -36,26 +43,59 @@ class UpdateProofController extends Controller
             throw new \Exception(sprintf('Cannot use %s backend with %s!', $backend, __CLASS__));
         }
 
-        $this->log('NOTICE', 'Start: Processing proofs...', 2);
+        $class = $request->getVar('Class') ?? '';
+        $recordId = $request->getVar('ID') ?? 0;
+        $version = $request->getVar('Version') ?? 0;
 
-        // Get all records with partial proofs. Attempt to fetch their full proofs
-        // from Tierion, then write them back to local DB
-        $this->updateVersions();
+        if ($class && $recordId && $version) {
+            $this->log('NOTICE', 'Start: Processing single proof...', 2);
+            $this->updateVersion($class, $recordId, $version);
+        } else {
+            $this->log('NOTICE', 'Start: Processing all proofs...', 2);
 
-        $this->log('NOTICE', 'Finish: Processing proofs.');
+            // Get all records with partial proofs. Attempt to fetch their full proofs
+            // from Tierion, then write them back to local DB
+            $this->updateVersions();
+        }
+
+        $this->log('NOTICE', 'End.', 2);
     }
 
     /**
-     * Fetch all partial proofs, ready to make them whole again by re-writing to
-     * each xxx_Versions table's "Proof" field.
+     * Process a single version for a single record. Fetch partial proof, ready to
+     * make them whole again by re-writing to the xxx_Versions table's "Proof" field.
      *
-     * @return array
+     * @param  string $class
+     * @param  int    $id
+     * @param  int    $version
+     * @return void
+     * @throws Exception
+     */
+    protected function updateVersion($class, $id, $version)
+    {
+        if (!$record = $class::get()->byID($id)) {
+            throw new \Exception(sprintf('Cannot find %s record for #%d', $class, $id));
+        }
+
+        if (!$record->hasExtension(VerifiableExtension::class)) {
+            throw new \Exception(sprintf('%s does not have verifiable extension applied', $class));
+        }
+
+        $record = Versioned::get_version($class, $id, $version);
+
+        $this->process($record);
+    }
+
+    /**
+     * Process all versions for all applicable records. Fetch partial proofs, ready to
+     * make them whole again by re-writing to the xxx_Versions table's "Proof" field.
+     *
+     * @return void
      */
     protected function updateVersions()
     {
         // Get decorated classes
         $dataObjectSublasses = ClassInfo::getValidSubClasses(DataObject::class);
-        $candidates = [];
 
         foreach ($dataObjectSublasses as $class) {
             $obj = Injector::inst()->create($class);
@@ -67,43 +107,60 @@ class UpdateProofController extends Controller
             $this->log('NOTICE', "Processing class: $class");
 
             foreach ($class::get() as $item) {
-                // TODO Get all versions that have non-duplicated proof-hashes
                 $versions = Versioned::get_all_versions($class, $item->ID)->sort('Version ASC');
 
                 foreach ($versions as $record) {
-                    $proof = $record->dbObject('Proof');
+                    if (!$proof = $record->dbObject('Proof')) {
+                        continue;
+                    }
 
                     if ($proof->isInitial()) {
                         $this->log('NOTICE', "\tInitial proof found for ID #{$record->RecordID} and version {$record->Version}");
                         $this->log('NOTICE', "\tRequesting proof via UUID {$proof->getHashIdNode()[0]}");
 
-                        // I don't understand the Tierion network... if we submit a hash to one IP
-                        // the rest of the network is not updated. So we need to pre-seed the service
-                        // with the saved nodes...unless it's only verified proofs that get propagated..??
-                        $nodes = $record->dbObject('Extra')->getStoreAsArray();
-                        $uuid = $proof->getHashIdNode()[0];
-                        $this->verifiableService->setExtra($nodes);
-
-                        $this->log('NOTICE', sprintf('Calling %s/proofs/%s', $nodes[0], $uuid));
-
-                        // Don't attempt to write anything that isn't a full proof
-                        $response = $this->verifiableService->call('read', $uuid);
-                        $isFull = ChainpointProof::create()
-                                ->setValue($response)
-                                ->isFull();
-
-                        if ($isFull) {
-                            $this->log('NOTICE', "Full proof fetched. Updating record with ID #{$record->RecordID} and version $version");
-                            $this->updateQuery($record, $version, $response);
-                        } else {
-                            $this->log('WARN', "No full proof found for record with ID #{$record->RecordID} and version $version");
-                        }
+                        $this->process($record, $proof);
                     }
                 }
             }
         }
+    }
 
-        return $candidates;
+    /**
+     * Make the call to the backend, return a full-proof if it's available and
+     * update the local version with it.
+     *
+     * @param  DataObject $record
+     * @param  string     $proof
+     * @return void
+     */
+    protected function process($record, $proof)
+    {
+        // I don't understand the Tierion network... if we submit a hash to one IP
+        // the rest of the network is not updated. So we need to pre-seed the service
+        // with the saved nodes...unless it's only verified proofs that get propagated..??
+        $nodes = $record->dbObject('Extra')->getStoreAsArray();
+        $uuid = $proof->getHashIdNode()[0];
+        $this->verifiableService->setExtra($nodes);
+
+        $this->log('NOTICE', sprintf('Calling cached node: %s/proofs/%s', $nodes[0], $uuid));
+
+        // Don't attempt to write anything that isn't a full proof
+        try {
+            $response = $this->verifiableService->call('read', $uuid);
+        } catch (VerifiableValidationException $e) {
+            $this->log('ERROR', $e->getMessage());
+        }
+
+        $isFull = ChainpointProof::create()
+                ->setValue($response)
+                ->isFull();
+
+        if ($isFull) {
+            $this->log('NOTICE', "Full proof fetched. Updating record with ID #{$record->RecordID} and version $version");
+            $this->doUpdate($record, $record->Version, $response);
+        } else {
+            $this->log('WARN', "No full proof found for record with ID #{$record->RecordID} and version {$record->Version}");
+        }
     }
 
     /**
@@ -113,7 +170,7 @@ class UpdateProofController extends Controller
      * @param type $id
      * @param type $version
      */
-    protected function updateQuery($object, $version, $proof)
+    protected function doUpdate($object, $version, $proof)
     {
         $table = sprintf('%s_Versions', $object->config()->get('table_name'));
         $sql = sprintf(
@@ -130,17 +187,45 @@ class UpdateProofController extends Controller
     }
 
     /**
+     * Simple colourised logging.
+     *
      * @param  string $type
      * @param  string $msg
      * @param  int    $newLine
      * @return void
-     * @todo   Declare a custom Monolog\Formatter\FormatterInterface
      */
-    private function log(string $type, string $msg, int $newLines = 1)
+    protected function log(string $type, string $msg, int $newLines = 1)
     {
         $lb = Director::is_cli() ? PHP_EOL : '<br/>';
+        $colours = [
+            'default' => "\033[0m",
+            'red' => "\033[31m",
+            'green' => "\033[32m",
+            'yellow' => "\033[33m",
+            'blue' => "\033[34m",
+            'magenta' => "\033[35m",
+        ];
 
-        echo sprintf('[%s] %s%s', $type, $msg, str_repeat($lb, $newLines));
+        switch ($type) {
+            case 'ERROR':
+                $colour = $colours['red'];
+                break;
+            case 'WARN':
+                $colour = $colours['yellow'];
+                break;
+            default:
+            case 'WARN':
+                $colour = $colours['green'];
+                break;
+        }
+
+        echo sprintf('%s[%s] %s%s%s',
+                $colour,
+                $type,
+                $msg,
+                str_repeat($lb, $newLines),
+                $colours['default']
+            );
     }
 
 }
