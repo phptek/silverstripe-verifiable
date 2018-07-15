@@ -71,6 +71,14 @@ class VerifiableController extends Controller
     const STATUS_PENDING = 'Pending';
 
     /**
+     * This version's hash confirmation has occurred, but is not yet verified. If it's been more than
+     * two hours since submission, try again.
+     *
+     * @var string
+     */
+    const STATUS_FULL = 'Full';
+
+    /**
      * The verification process encountered a network error communicating with the
      * backend. Try again in a moment.
      *
@@ -183,6 +191,10 @@ class VerifiableController extends Controller
 
         if ($proof->isPending()) {
             return self::STATUS_PENDING;
+        }
+
+        if ($proof->isFull()) {
+            return self::STATUS_FULL;
         }
 
         // So the saved proof claims to be full and verified eh?

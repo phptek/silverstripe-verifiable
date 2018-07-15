@@ -116,23 +116,6 @@ class ChainpointProof extends JSONText
     /**
      * Returns all the "anchor" objects for the currently stored proof.
      *
-     * Example return value:
-     *
-     * <code>
-     * ["anchors"]=>
-     * array(1) {
-     * [0]=>
-     *  array(3) {
-     *    ["branch"]=>
-     *    string(17) "cal_anchor_branch"
-     *    ["type"]=>
-     *    string(3) "cal"
-     *    ["valid"]=>
-     *    bool(true)
-     *  }
-     * }
-     * </code>
-     *
      * @return array
      */
     public function getAnchors() : array
@@ -141,7 +124,24 @@ class ChainpointProof extends JSONText
         $value = $this->query('$..anchors');
 
         if (!empty($value)) {
-            return $value;
+            return $value[0];
+        }
+
+        return [];
+    }
+
+    /**
+     * Returns all the "anchors_complete" objects for the currently stored proof.
+     *
+     * @return array
+     */
+    public function getAnchorsComplete() : array
+    {
+        $this->setReturnType('array');
+        $value = $this->query('$..anchors_complete');
+
+        if (!empty($value)) {
+            return $value[0];
         }
 
         return [];
@@ -197,7 +197,7 @@ class ChainpointProof extends JSONText
      */
     public function isPending() : bool
     {
-        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchors()) === 0;
+        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchorsComplete()) === 1;
     }
 
     /**
@@ -212,7 +212,7 @@ class ChainpointProof extends JSONText
      */
     public function isFull() : bool
     {
-        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchors()) >= 2;
+        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchorsComplete()) >= 2;
     }
 
     /**
@@ -224,11 +224,7 @@ class ChainpointProof extends JSONText
      */
     public function isVerified() : bool
     {
-        if (!$this->isFull() || count($this->getAnchors()) <= 1) {
-            return false;
-        }
-
-        return $this->getStatus() === 'verified';
+        return $this->getModelType() === self::MODEL_TYPE_PVR && $this->getStatus() === 'verified';
     }
 
 }
