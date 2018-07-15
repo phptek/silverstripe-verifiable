@@ -171,8 +171,12 @@ class ChainpointProof extends JSONText
     }
 
     /**
-     * Does the proof's data represent an INITIAL proof? The type we get straight
-     * from a request to the /hashes endpoint?
+     * "Initial" is not an official name for a particular response format.
+     * We have invented it. This method will tell us if the format of the stored
+     * proof is of the type that a node will immediately return upon receiving a
+     * POST request to the /hashes endpoint.
+     *
+     * An example of such a response can be found in:  test/fixture/response-initial.json.
      *
      * @return bool
      */
@@ -182,8 +186,27 @@ class ChainpointProof extends JSONText
     }
 
     /**
-     * Does the proof's data represent a FULL verification as far as the local database
-     * is concerned?
+     * "Pending" is an official name for a particular response format. This method
+     * will tell us if the format of the stored proof is of the type that a node
+     * will immediately return upon receiving a GET request to the /proofs
+     * endpoint, 15s or more AFTER receiving a POST request to the /hashes endpoint.
+     *
+     * An example of such a response can be found in:  test/fixture/response-pending.json.
+     *
+     * @return bool
+     */
+    public function isPending() : bool
+    {
+        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchors()) === 0;
+    }
+
+    /**
+     * "Full" is an official name for a particular response format. This method
+     * will tell us if the format of the stored proof is of the type that a node
+     * will immediately return upon receiving a GET request to the /proofs
+     * endpoint, 2h or more AFTER receiving a POST request to the /hashes endpoint.
+     *
+     * An example of such a response can be found in:  test/fixture/response-full.json.
      *
      * @return bool
      */
@@ -193,19 +216,8 @@ class ChainpointProof extends JSONText
     }
 
     /**
-     * Does the proof's data represent a PARTIAL verification as far as the local database
-     * is concerned?
-     *
-     * @return bool
-     */
-    public function isPending() : bool
-    {
-        return $this->getModelType() === self::MODEL_TYPE_GPR && count($this->getAnchors()) === 1;
-    }
-
-    /**
-     * Is this full proof verified? A verified proof is one that is confirmed on
-     * Tierion's ("calendar") blockchain, and at least one other e.g. Bitcoin.
+     * "Verified" is an official name, but not for a particular response format.
+     * Rather for determining if a full-proof is verified.
      *
      * @return bool
      * @todo If a full-proof contains >1 "anchors" block, what is the value of 'status'?

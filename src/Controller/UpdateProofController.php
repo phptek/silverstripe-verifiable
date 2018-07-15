@@ -27,7 +27,7 @@ use PhpTek\Verifiable\Exception\VerifiableValidationException;
  * @todo Update logic to write hashes to all 3 nodes, not just the first as-is the case in the client() method.
  * @todo Only fetch versions that have unique proof values
  * @todo Call this controller from admin UI for pending verification statuses
- * @todo Declare a custom Monolog\Formatter\FormatterInterface and refactor log()
+ * @todo Declare a custom Monolog\Formatter\FormatterInterface and refactor log() method
  */
 class UpdateProofController extends Controller
 {
@@ -105,6 +105,7 @@ class UpdateProofController extends Controller
             }
 
             $this->log('NOTICE', "Processing class: $class");
+            $classFlag = false;
 
             foreach ($class::get() as $item) {
                 $versions = Versioned::get_all_versions($class, $item->ID)->sort('Version ASC');
@@ -115,19 +116,23 @@ class UpdateProofController extends Controller
                     }
 
                     if ($proof->isInitial()) {
+                        $classFlag = true;
                         $this->log('NOTICE', "\tInitial proof found for ID #{$record->RecordID} and version {$record->Version}");
                         $this->log('NOTICE', "\tRequesting proof via UUID {$proof->getHashIdNode()[0]}");
-
                         $this->process($record, $proof);
                     }
                 }
+            }
+
+            if (!$classFlag) {
+                $this->log('NOTICE', "Nothing to do.");
             }
         }
     }
 
     /**
      * Make the call to the backend, return a full-proof if it's available and
-     * update the local version with it.
+     * update the local version(s) with it.
      *
      * @param  DataObject $record
      * @param  string     $proof
@@ -142,7 +147,7 @@ class UpdateProofController extends Controller
         $uuid = $proof->getHashIdNode()[0];
         $this->verifiableService->setExtra($nodes);
 
-        $this->log('NOTICE', sprintf('Calling cached node: %s/proofs/%s', $nodes[0], $uuid));
+        $this->log('NOTICE', sprintf("\tCalling cached node: %s/proofs/%s", $nodes[0], $uuid));
 
         // Don't attempt to write anything that isn't a full proof
         try {
@@ -156,10 +161,10 @@ class UpdateProofController extends Controller
                 ->isFull();
 
         if ($isFull) {
-            $this->log('NOTICE', "Full proof fetched. Updating record with ID #{$record->RecordID} and version $version");
+            $this->log('NOTICE', "Full proof fetched. Updating record ID #{$record->RecordID} and version {$record->Version}");
             $this->doUpdate($record, $record->Version, $response);
         } else {
-            $this->log('WARN', "No full proof found for record with ID #{$record->RecordID} and version {$record->Version}");
+            $this->log('WARN', "\t\tNo full proof found for record ID #{$record->RecordID} and version {$record->Version}");
         }
     }
 
@@ -187,7 +192,7 @@ class UpdateProofController extends Controller
     }
 
     /**
-     * Simple colourised logging.
+     * Simple colourised logging for CLI operation only.
      *
      * @param  string $type
      * @param  string $msg
@@ -196,6 +201,10 @@ class UpdateProofController extends Controller
      */
     protected function log(string $type, string $msg, int $newLines = 1)
     {
+        if (!Director::is_cli()) {
+            return;
+        }
+
         $lb = Director::is_cli() ? PHP_EOL : '<br/>';
         $colours = [
             'default' => "\033[0m",
