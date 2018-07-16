@@ -16,6 +16,8 @@ use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\HiddenField;
 use PhpTek\JSONText\ORM\FieldType\JSONText;
 use SilverStripe\View\Requirements;
+use SilverStripe\Versioned\Versioned;
+use SilverStripe\ORM\DB;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass, it will therefore
@@ -54,16 +56,14 @@ class VerifiableExtension extends DataExtension
     private static $verifiable_fields = [];
 
     /**
-     * Before each write, data from the $verifiable_fields config is compiled
-     * into a string, hashed and submitted to the current backend.
+     * After each publish action, userland data coming from either a custom `verify()`
+     * method or `$verifiable_fields` config, is compiled into a string, hashed and
+     * submitted to the current backend.
      *
      * @return void
-     * @todo Implement in onAfterPublish() instead. Minimises HTTP requests to the backend.
      */
-    public function onBeforeWrite()
+    public function onAfterPublish()
     {
-        parent::onBeforeWrite();
-
         $verifiable = $this->source();
         $owner = $this->getOwner();
         $this->verifiableService->setExtra();
@@ -74,8 +74,18 @@ class VerifiableExtension extends DataExtension
                 $proofData = json_encode($proofData);
             }
 
-            $owner->setField('Proof', $proofData);
-            $owner->setField('Extra', json_encode($this->verifiableService->getExtra()));
+            // Update the versions table manually to avoid double publish problem
+            // when a DO is marked as "changed"
+            $latest = Versioned::get_latest_version(get_class($owner), $owner->ID);
+            $table = sprintf('%s_Versions', $latest->config()->get('table_name'));
+            DB::query(sprintf(
+                'UPDATE "%s" SET "Proof" = \'%s\', Extra = \'%s\' WHERE "RecordID" = %d AND "Version" = %d',
+                $table,
+                $proofData,
+                json_encode($this->verifiableService->getExtra()),
+                $latest->ID,
+                $latest->Version
+            ));
         }
     }
 
