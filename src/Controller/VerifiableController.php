@@ -80,6 +80,15 @@ class VerifiableController extends Controller
     const STATUS_PENDING = 'Pending';
 
     /**
+     * This version's hash confirmation is currently awaiting processing. If it's
+     * been more than two hours since submission, please check the automated update job.
+     * Consult your developer..
+     *
+     * @var string
+     */
+    const STATUS_INITIAL = 'Initial';
+
+    /**
      * The verification process encountered a network error communicating with the
      * backend. Try again in a moment.
      *
@@ -188,6 +197,10 @@ class VerifiableController extends Controller
         // Basic existence of proof
         if (!$proof->getValue()) {
             return self::STATUS_LOCAL_PROOF_NONE;
+        }
+
+        if ($proof->isInitial()) {
+            return self::STATUS_INITIAL;
         }
 
         if ($proof->isPending()) {
