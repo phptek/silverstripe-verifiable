@@ -11,6 +11,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\ValidationException;
+use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 
 /**
  * Accepts incoming requests for data verification e.g. from within the CMS
@@ -48,11 +49,19 @@ class VerifiableController extends Controller
     const STATUS_LOCAL_HASH_INVALID = 'Local Hash Invalid';
 
     /**
-     * All checks passed. This version's hash and proof are intact and verified.
+     * All verification checks passed. This version's hash and proof are intact and verified.
      *
      * @var string
      */
-    const STATUS_VERIFIED = 'Verified';
+    const STATUS_VERIFIED_OK = 'Verified';
+
+    /**
+     * Some or all verification checks failed. This version's hash and proof are not intact.
+     * Evidence that the record has been tampered-with.
+     *
+     * @var string
+     */
+    const STATUS_VERIFIED_FAIL = 'Verified';
 
     /**
      * This version is unverified. If this state persists, something is not working
@@ -69,14 +78,6 @@ class VerifiableController extends Controller
      * @var string
      */
     const STATUS_PENDING = 'Pending';
-
-    /**
-     * This version's hash confirmation has occurred, but is not yet verified. If it's been more than
-     * two hours since submission, try again.
-     *
-     * @var string
-     */
-    const STATUS_FULL = 'Full';
 
     /**
      * The verification process encountered a network error communicating with the
@@ -173,8 +174,8 @@ class VerifiableController extends Controller
      * account the state of the saved proof as well as by making a backend
      * verification call.
      *
-     * @param  DataObject $record
-     * @param  array      $nodes
+     * @param  DataObject $record The versioned record we're checking
+     * @param  array      $nodes  An array of cached chainpoint node IPs
      * @return string
      */
     public function getStatus($record, $nodes)
@@ -193,35 +194,39 @@ class VerifiableController extends Controller
             return self::STATUS_PENDING;
         }
 
+        // So the saved proof claims to be full. Perform some rudimentary checks
+        // before we send a full-blown verification request to the backend
         if ($proof->isFull()) {
-            return self::STATUS_FULL;
-        }
-
-        // So the saved proof claims to be full and verified eh?
-        // Let's see about that. Perform some rudimentary checks before we send a
-        // full-blown verification request to the backend
-        if ($proof->isVerified()) {
             // Tests 3 of the key components of the local proof. Sending a verification
             // request will do this and much more for us, but rudimentary local checks
-            // may prevent a network request even being needed.
-            if (!$proof->getHashIdNode() || !$proof->getHash() || !$proof->getSubmittedAt()) {
+            // can prevent a network request
+            if (!$proof->getHashIdNode() || !$proof->getProof() || !count($proof->getAnchorsComplete())) {
                 return self::STATUS_LOCAL_COMPONENT_INVALID;
             }
 
-            // OK, so we have an intact local hash, let's ensure it still matches a hash
-            // of the data it purports to represent
-            if ($proof->getHash() !== $this->verifiableService->hash($record->source())) {
+            // We've got this far. The local proof seems to be good. Let's verify
+            // it against the backend
+            $response = $this->verifiableService->call('verify', $record->getField('Proof'));
+            $isVerified = ChainpointProof::create()
+                    ->setValue($response)
+                    ->isVerified();
+
+            if (!$isVerified) {
+                return self::STATUS_VERIFIED_FAIL;
+            }
+
+            // OK, so we have an intact local full proof, let's ensure it still
+            // matches a hash of the data it purports to represent
+            $remoteHash = ChainpointProof::create()
+                    ->setValue($response)
+                    ->getHash();
+
+            if ($this->verifiableService->hash($record->source()) !== $remoteHash) {
                 return self::STATUS_LOCAL_HASH_INVALID;
             }
 
-            // We've got this far. The local proof seems pretty good. Let's verify against
-            // the backend and make sure
-            $response = $this->verifiableService->call('verify', $record->getField('Proof'));
-
-            // TODO
-            if ($response->getStatusCode() !== 209) {
-                return self::STATUS_VERIFIED;
-            }
+            // All is well. As you were...
+            return self::STATUS_VERIFIED_OK;
         }
 
         // Default status

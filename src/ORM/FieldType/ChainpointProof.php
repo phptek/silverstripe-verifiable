@@ -52,6 +52,23 @@ class ChainpointProof extends JSONText
     }
 
     /**
+     * Returns the generated value of the proof's "hash_id_node" key. This is used
+     * as a UUID for proofs.
+     *
+     * @return string
+     */
+    public function getProof() : string
+    {
+        $this->setReturnType('array');
+
+        if (!empty($value = $this->query('$..proof'))) {
+            return $value[0];
+        }
+
+        return '';
+    }
+
+    /**
      * Returns the generated value of the proof's "hash" key.
      *
      * @return string

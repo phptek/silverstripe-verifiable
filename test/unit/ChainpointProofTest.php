@@ -71,6 +71,14 @@ class ChainpointProofTest extends SapphireTest
         $this->assertEquals('verified', $this->proofs['veri']->getStatus());
     }
 
+    public function testGetProof()
+    {
+        $this->assertContains('eJyVVkFvpEcRhX/Aj+C4XldXd1d3+7', $this->proofs['full']->getProof());
+        $this->assertEquals('', $this->proofs['init']->getProof());
+        $this->assertContains('eJyNU82OHDUQ5hHyEBwzO1W2y3b1aSVegVMuo7JdZlpaZkb', $this->proofs['pend']->getProof());
+        $this->assertEquals('', $this->proofs['veri']->getProof());
+    }
+
     public function testGetAnchors()
     {
         $this->assertCount(0, $this->proofs['full']->getAnchors());
