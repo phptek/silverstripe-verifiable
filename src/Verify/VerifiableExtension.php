@@ -138,10 +138,14 @@ class VerifiableExtension extends DataExtension
         Requirements::javascript('phptek/verifiable: client/verifiable.js');
 
         $owner = $this->getOwner();
-        $list = [];
+        $list = $disabled = [];
         $versions = $owner->Versions()->sort('Version');
 
         foreach ($versions as $item) {
+            if ($item->Version == 1) {
+                $disabled[] = $item->Version;
+            }
+
             $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->Created);
         }
 
@@ -152,7 +156,8 @@ class VerifiableExtension extends DataExtension
                     . ' displayed.</p>'),
             HiddenField::create('Type', null, get_class($owner)),
             DropdownField::create('Version', 'Version', $list)
-                ->setEmptyString('-- Select One --'),
+                ->setEmptyString('-- Select One --')
+                ->setDisabledItems($disabled),
             FormAction::create('doVerify', 'Verify')
                 ->setUseButtonTag(true)
                 ->addExtraClass('btn action btn-outline-primary ')
