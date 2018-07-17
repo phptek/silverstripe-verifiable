@@ -92,3 +92,4 @@ You'll also need to install a simple cron job on your hosting environment which 
 
 * [Trustworthy technology: The future of digital archives](https://blog.nationalarchives.gov.uk/blog/trustworthy-technology-future-digital-archives/)
 * [Xero Integrates With Tierion To Secure Accounting Data Using Chainpoint](https://blog.tierion.com/2018/04/19/xero-integrates-with-tierion-to-secure-accounting-data-using-chainpoint/)
+* [The ChainPoint Standard](https://chainpoint.org/)
