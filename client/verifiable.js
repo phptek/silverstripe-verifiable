@@ -35,12 +35,26 @@
                     
                     $.get(controllerUrl)
                         .done(function(data) {
-                            var message = '<strong>' + data.StatusNice + '</strong> ' + data.StatusDefn,
-                                cssClass = data.StatusCode === 'STATUS_VERIFIED' || data.StatusCode === 'STATUS_PENDING' ? 'good' : 'bad';
+                            var message = '<strong>' + data.StatusNice + '</strong> ' + data.StatusDefn;
+                    
+                            if (data.StatusCode === 'STATUS_VERIFIED_OK') {
+                                msgCssClass = 'good';
+                                btnCssClass = 'font-icon-tick';
+                            } else {
+                                msgCssClass = (
+                                    data.StatusCode === 'STATUS_INITIAL' ||
+                                    data.StatusCode === 'STATUS_PENDING' ? 'good' : 'bad'
+                                );
+                                btnCssClass = (
+                                    data.StatusCode === 'STATUS_INITIAL' ||
+                                    data.StatusCode === 'STATUS_PENDING' ? 'font-icon-globe-1' : 'font-icon-cross-mark'
+                                );
+                            }
                                 
-                            $root.prepend($('<p class="message v-status ' + cssClass + '">' + message + '</p>'));
+                            $root.prepend($('<p class="message v-status ' + msgCssClass + '">' + message + '</p>'));
                             $button
-                                .addClass('font-icon-tick')
+                                .removeClass('font-icon-cross-mark font-icon-tick')
+                                .addClass(btnCssClass)
                                 .removeClass('btn--loading loading');
                         
                             $('.btn__loading-icon').remove();
@@ -53,7 +67,8 @@
                             msg += '</p>';
                             $root.prepend($(msg));
                             $button
-                                .addClass('font-icon-cross')
+                                .removeClass('font-icon-cross-mark font-icon-tick')
+                                .addClass('font-icon-cross-mark')
                                 .removeClass('btn--loading loading');
                             
                             $('.btn__loading-icon').remove();
