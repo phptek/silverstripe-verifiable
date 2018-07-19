@@ -10,7 +10,7 @@ PhpTek\Verifiable\Model\VerifiableExtension:
   dependencies:
     service: '%$BackendService'
     
-PhpTek\Verifiable\Controller\VerifiableController:
+PhpTek\Verifiable\Controller\VerifiableAdminController:
   dependencies:
     service: '%$BackendService'
     

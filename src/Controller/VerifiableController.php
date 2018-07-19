@@ -11,6 +11,8 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\ValidationException;
+use SilverStripe\Security\Security;
+use SilverStripe\Security\Permission;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 
 /**
@@ -21,7 +23,7 @@ use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
  * Will proxy validation requests to the currently configured backend for both
  * {@link SiteTree} and {@link DataObject} subclasses.
  */
-class VerifiableController extends Controller
+class VerifiableAdminController extends Controller
 {
     /**
      * No local proof was found for this version. If this is the first version,
@@ -114,6 +116,10 @@ class VerifiableController extends Controller
      */
     public function verifyhash(HTTPRequest $request)
     {
+        if (!Permission::checkMember(Security::getCurrentUser(), 'ADMIN')) {
+            return $this->httpError(401, 'Unauthorised');
+        }
+
         $class = $request->param('ClassName');
         $id = $request->param('ModelID');
         $version = $request->param('VersionID');
