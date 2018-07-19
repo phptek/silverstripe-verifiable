@@ -5,15 +5,14 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Backend;
+namespace PhpTek\Verifiable\Backend\Chainpoint;
 
-use PhpTek\Verifiable\Backend\BackendProvider;
+use PhpTek\Verifiable\Backend\GatewayProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Exception\VerifiableValidationException;
-use SilverStripe\Core\Injector\Injector;
 
 /**
  * Calls the endpoints of the Tierion network's ChainPoint service.
@@ -21,7 +20,7 @@ use SilverStripe\Core\Injector\Injector;
  * @see https://app.swaggerhub.com/apis/chainpoint/node/1.0.0
  * @see https://chainpoint.org
  */
-class Chainpoint implements BackendProvider
+class Gateway implements GatewayProvider
 {
     use Configurable;
 
@@ -57,7 +56,7 @@ class Chainpoint implements BackendProvider
      * @param  string $hashIdNode
      * @return string A v3 ChainpointProof
      */
-    public function getProof(string $hashIdNode) : string
+    public function proofs(string $hashIdNode) : string
     {
         $response = $this->client("/proofs/$hashIdNode", 'GET');
 
@@ -72,7 +71,7 @@ class Chainpoint implements BackendProvider
      * @param  array $hashes
      * @return string (From GuzzleHttp\Stream::getContents()
      */
-    public function writeHash(array $hashes) : string
+    public function hashes(array $hashes) : string
     {
         $response = $this->client('/hashes', 'POST', ['hashes' => $hashes]);
 
@@ -87,44 +86,11 @@ class Chainpoint implements BackendProvider
      * @return string
      * @todo See the returned proof's "uris" key, to be able to call a specific URI for proof verification.
      */
-    public function verifyProof(string $proof) : string
+    public function verify(string $proof) : string
     {
-        // Consult blockchains directly, if so configured and suitable
-        // blockchain full-nodes are available to our RPC connections
-        if ((bool) $this->config()->get('direct_verification')) {
-            return $this->backend->verifyDirect($proof);
-        }
-
         $response = $this->client('/verify', 'POST', ['proofs' => [$proof]]);
 
         return $response->getBody()->getContents() ?? '[]';
-    }
-
-    /**
-     * For each of this backend's supported blockchain networks, skips any intermediate
-     * verification steps through the Tieron network, preferring instead to calculate
-     * proofs ourselves in consultation directly with the relevant networks.
-     *
-     * @param  string $proof    The stored JSON-LD chainpoint proof
-     * @param  array  $networks An array of available blockchains to consult
-     * @return bool             Returns true if each blockchain found in $network
-     *                          can verify our proof.
-     * @see    https://runkit.com/tierion/verify-a-chainpoint-proof-directly-using-bitcoin
-     */
-    protected function verifyProofDirect(string $proof, array $networks = [])
-    {
-        $result = [];
-
-        foreach ($this->config()->get('blockchain_config') as $config) {
-            if (in_array($config['name'], $networks)) {
-                $implementation = ucfirst(strtolower($config['name']));
-                $node = Injector::inst()->createWithArgs($implementation, [$config]);
-
-                $result[strtolower($config['name'])] = $node->verifyProof($proof);
-            }
-        }
-
-        return !in_array(false, $result);
     }
 
     /**
