@@ -16,7 +16,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Control\Director;
 use SilverStripe\Versioned\Versioned;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
-use PhpTek\Verifiable\Verify\VerifiableExtension;
+use PhpTek\Verifiable\Model\VerifiableExtension;
 use PhpTek\Verifiable\Exception\VerifiableValidationException;
 
 /**
@@ -24,9 +24,7 @@ use PhpTek\Verifiable\Exception\VerifiableValidationException;
  * object versions with full-proofs.
  *
  * @todo Check with Tierion API docs: How many nodes should be submitted to? And why if I submit to only one, does the network not synchronise it?
- * @todo Update logic to write hashes to all 3 nodes, not just the first as-is the case in the client() method.
  * @todo Only fetch versions that have unique proof values
- * @todo Call this controller from admin UI for pending verification statuses
  * @todo Declare a custom Monolog\Formatter\FormatterInterface and refactor log() method
  */
 class UpdateProofController extends Controller
@@ -39,7 +37,7 @@ class UpdateProofController extends Controller
      */
     public function index(HTTPRequest $request = null)
     {
-        if (!$backend = $this->verifiableService->getBackend()->name() === 'chainpoint') {
+        if (!$backend = $this->service->name() === 'chainpoint') {
             throw new \Exception(sprintf('Cannot use %s backend with %s!', $backend, __CLASS__));
         }
 
@@ -145,13 +143,13 @@ class UpdateProofController extends Controller
         // with the saved nodes...unless it's only verified proofs that get propagated..??
         $nodes = $record->dbObject('Extra')->getStoreAsArray();
         $uuid = $proof->getHashIdNode()[0];
-        $this->verifiableService->setExtra($nodes);
+        $this->service->setExtra($nodes);
 
         $this->log('NOTICE', sprintf("\tCalling cached node: %s/proofs/%s", $nodes[0], $uuid));
 
         // Don't attempt to write anything that isn't a full proof
         try {
-            $response = $this->verifiableService->call('read', $uuid);
+            $response = $this->service->call('read', $uuid);
         } catch (VerifiableValidationException $e) {
             $this->log('ERROR', $e->getMessage());
         }

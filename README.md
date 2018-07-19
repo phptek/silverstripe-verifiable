@@ -39,7 +39,7 @@ At least PHP7 and SilverStripe 4.
 Configure the desired backend:
 
 ```YML
-PhpTek\Verifiable\Verify\VerifiableService:
+PhpTek\Verifiable\Backend\VerifiableServiceFactory
   # One of: "trillian" or "chainpoint"
   backend: chainpoint
 ```
@@ -49,7 +49,7 @@ Add the `VerifiableExtension` to each data-model that you'd like to be "Verifiab
 ```YML
 My\Name\Space\Model\MyModel:
   extensions:
-    - PhpTek\Verifiable\Verify\VerifiableExtension
+    - PhpTek\Verifiable\Model\VerifiableExtension
 ```
 
 By default, any fields on your decorated model(s) that you define in the `verifiable_fields` array, will be hashed and submitted to the backend thus:

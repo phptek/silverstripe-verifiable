@@ -191,7 +191,7 @@ class VerifiableController extends Controller
     {
         // Set some extra data on the service. In this case, the actual chainpoint
         // node addresses, used to submit hashes for the given $record
-        $this->verifiableService->setExtra($nodes);
+        $this->service->setExtra($nodes);
         $proof = $record->dbObject('Proof');
 
         // Basic existence of proof
@@ -219,7 +219,7 @@ class VerifiableController extends Controller
 
             // We've got this far. The local proof seems to be good. Let's verify
             // it against the backend
-            $response = $this->verifiableService->call('verify', $record->getField('Proof'));
+            $response = $this->service->call('verify', $record->getField('Proof'));
             $isVerified = ChainpointProof::create()
                     ->setValue($response)
                     ->isVerified();
@@ -234,7 +234,7 @@ class VerifiableController extends Controller
                     ->setValue($response)
                     ->getHash();
 
-            if ($this->verifiableService->hash($record->source()) !== $remoteHash) {
+            if ($this->service->hash($record->source()) !== $remoteHash) {
                 return self::STATUS_LOCAL_HASH_INVALID;
             }
 

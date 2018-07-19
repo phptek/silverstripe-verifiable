@@ -5,7 +5,7 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Verify;
+namespace PhpTek\Verifiable\Model;
 
 use SilverStripe\ORM\DataExtension;
 use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
@@ -66,10 +66,10 @@ class VerifiableExtension extends DataExtension
     {
         $verifiable = $this->source();
         $owner = $this->getOwner();
-        $this->verifiableService->setExtra();
+        $this->service->setExtra();
         $doAnchor = (count($verifiable) && $owner->exists());
 
-        if ($doAnchor && $proofData = $this->verifiableService->call('write', $verifiable)) {
+        if ($doAnchor && $proofData = $this->service->call('write', $verifiable)) {
             if (is_array($proofData)) {
                 $proofData = json_encode($proofData);
             }
@@ -82,7 +82,7 @@ class VerifiableExtension extends DataExtension
                 'UPDATE "%s" SET "Proof" = \'%s\', Extra = \'%s\' WHERE "RecordID" = %d AND "Version" = %d',
                 $table,
                 $proofData,
-                json_encode($this->verifiableService->getExtra()),
+                json_encode($this->service->getExtra()),
                 $latest->ID,
                 $latest->Version
             ));

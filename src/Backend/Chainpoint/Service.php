@@ -5,26 +5,27 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Verify;
+namespace PhpTek\Verifiable\Backend\Chainpoint;
 
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
-use SilverStripe\Core\ClassInfo;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
-use PhpTek\Verifiable\Backend\BackendProvider;
+use PhpTek\Verifiable\Backend\GatewayProvider;
+use PhpTek\Verifiable\Backend\ServiceProvider;
+use PhpTek\Verifiable\Backend\Chainpoint\Gateway;
 
 /**
  * Service class that works as an intermediary between any data model and the
- * currently selected Merkle Tree storage backend.
+ * currently selected Merkle Tree backend gateway.
  */
-class VerifiableService
+class Service implements ServiceProvider
 {
     use Injectable;
     use Configurable;
 
     /**
-     * @var BackendProvider
+     * @var GatewayProvider
      */
     protected $backend;
 
@@ -39,11 +40,19 @@ class VerifiableService
      */
     public function __construct()
     {
-        $this->setBackend();
+        $this->setGateway();
     }
 
     /**
-     * Wrapper around all backend methods.
+     * @return string
+     */
+    public function name() : string
+    {
+        return $this->getGateway()->name();
+    }
+
+    /**
+     * Wrapper around all gateway methods.
      *
      * @param  string $method The name of the method to call
      * @param  mixed  $arg    The argument to pass to $method
@@ -56,7 +65,7 @@ class VerifiableService
             throw new \InvalidArgumentException("$method doesn't exist.");
         }
 
-        $this->backend->setDiscoveredNodes($this->getExtra());
+        $this->gateway->setDiscoveredNodes($this->getExtra());
 
         return $this->$method($arg);
     }
@@ -70,7 +79,7 @@ class VerifiableService
      */
     protected function write(array $data)
     {
-        return $this->backend->writeHash([$this->hash($data)]);
+        return $this->gateway->hashes([$this->hash($data)]);
     }
 
     /**
@@ -82,10 +91,10 @@ class VerifiableService
     protected function read($uuid) : string
     {
         if (is_array($uuid)) {
-            return $this->backend->getProofs(array_unique($uuid));
+            return $this->gateway->proofs(array_unique($uuid));
         }
 
-        return $this->backend->getProof($uuid);
+        return $this->gateway->proofs($uuid);
     }
 
     /**
@@ -96,7 +105,7 @@ class VerifiableService
      */
     protected function verify(string $proof)
     {
-        return $this->backend->verifyProof($proof);
+        return $this->gateway->verify($proof);
     }
 
     /**
@@ -109,8 +118,8 @@ class VerifiableService
     public function setExtra(array $extra = [])
     {
         if (!$extra) {
-            $this->backend->setDiscoveredNodes();
-            $this->extra = $this->backend->getDiscoveredNodes();
+            $this->gateway->setDiscoveredNodes();
+            $this->extra = $this->gateway->getDiscoveredNodes();
         } else {
             $this->extra = $extra;
         }
@@ -131,39 +140,27 @@ class VerifiableService
     /**
      * Set, configure and return a new Merkle Tree storage backend.
      *
-     * @param  BackendProvider   $provider Optional manually passed backend.
+     * @param  GatewayProvider   $provider Optional manually passed backend.
      * @return VerifiableService
      * @throws VerifiableBackendException
      */
-    public function setBackend(BackendProvider $provider = null)
+    public function setGateway(GatewayProvider $provider = null)
     {
         if ($provider) {
-            $this->backend = $provider;
+            $this->gateway = $provider;
 
             return $this;
         }
 
-        $namedBackend = $this->config()->get('backend');
-        $backends = ClassInfo::implementorsOf(BackendProvider::class);
-
-        foreach ($backends as $backend) {
-            if (singleton($backend)->name() === $namedBackend) {
-                $this->backend = Injector::inst()->create($backend);
-
-                return $this;
-            }
-        }
-
-        // Cannot continue without a legit backend
-        throw new VerifiableBackendException('No backend found');
+        $this->gateway = Injector::inst()->create(Gateway::class);
     }
 
     /**
-     * @return BackendProvider
+     * @return GatewayProvider
      */
-    public function getBackend()
+    public function getGateway()
     {
-        return $this->backend;
+        return $this->gateway;
     }
 
     /**
@@ -174,7 +171,7 @@ class VerifiableService
      */
     public function hash(array $data) : string
     {
-        $func = $this->backend->hashFunc();
+        $func = $this->gateway->hashFunc();
         $text = json_encode($data, true);
 
         return hash($func, $text);

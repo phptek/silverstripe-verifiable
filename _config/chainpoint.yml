@@ -2,7 +2,7 @@
 Name: verifiable-chainpoint-backend-config
 ---
 
-PhpTek\Verifiable\Backend\Chainpoint:
+PhpTek\Verifiable\Backend\Chainpoint\Gateway:
   client_config:
     timeout: 30
     connect_timeout: 30
