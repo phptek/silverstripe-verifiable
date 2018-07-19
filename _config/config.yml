@@ -2,15 +2,18 @@
 Name: verifiable-config
 ---
 
-PhpTek\Verifiable\Verify\VerifiableExtension:
+SilverStripe\Core\Injector\Injector:
+  BackendService:
+    factory: PhpTek\Verifiable\Backend\BackendServiceFactory
+
+PhpTek\Verifiable\Model\VerifiableExtension:
   dependencies:
-    verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
+    service: '%$BackendService'
     
 PhpTek\Verifiable\Controller\VerifiableController:
   dependencies:
-    verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
+    service: '%$BackendService'
     
 PhpTek\Verifiable\Controller\UpdateProofController:
   dependencies:
-    verifiableService: '%$PhpTek\Verifiable\Verify\VerifiableService'
-    
+    service: '%$BackendService'
