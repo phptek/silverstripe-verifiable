@@ -11,10 +11,7 @@ use SilverStripe\Dev\SapphireTest;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 
 /**
- * There are three "types" of data model available out of the Tierion network.
- * Rightly or wrongly, at the moment we're modeling backend-specific stuff in the
- * "ChainpointProof" field, when in fact it should only be used t model full-proofs
- * and nothing else.
+ * Simple tests of the key methods found in our JSONText subclass `ChainpointProof`.
  */
 class ChainpointProofTest extends SapphireTest
 {
@@ -32,6 +29,7 @@ class ChainpointProofTest extends SapphireTest
             'init' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/response-initial.json')),
             'pend' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/response-pending.json')),
             'veri' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/response-verified.json')),
+            'v3' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/chainpoint-proof.json')),
         ];
     }
 
@@ -79,12 +77,23 @@ class ChainpointProofTest extends SapphireTest
         $this->assertEquals('', $this->proofs['veri']->getProof());
     }
 
+    public function testGetProofJson()
+    {
+        $this->assertNotNull(json_decode($this->proofs['full']->getProofJson()));
+        $this->assertEquals('', $this->proofs['init']->getProofJson());
+        $this->assertNotNull(json_decode($this->proofs['pend']->getProofJson()));
+        $this->assertEquals('', $this->proofs['veri']->getProofJson());
+    }
+
     public function testGetAnchors()
     {
         $this->assertCount(0, $this->proofs['full']->getAnchors());
         $this->assertCount(0, $this->proofs['init']->getAnchors());
         $this->assertCount(0, $this->proofs['pend']->getAnchors());
         $this->assertCount(2, $this->proofs['veri']->getAnchors());
+        $this->assertCount(1, $this->proofs['v3']->getAnchors('cal'));
+        $this->assertCount(1, $this->proofs['v3']->getAnchors('btc'));
+        $this->assertCount(1, $this->proofs['v3']->getAnchors('foo')); // default!!
     }
 
     public function testGetAnchorsComplete()
