@@ -35,6 +35,11 @@ use SilverStripe\ORM\DB;
  */
 class VerifiableExtension extends DataExtension
 {
+    // This data-model is using the default "verifiable_fields" mode
+    const SOURCE_MODE_FIELD = 1;
+    // This data-model is using the custom "verify" function mode
+    const SOURCE_MODE_FUNC = 2;
+
     /**
      * Declares a JSON-aware {@link DBField} where all chainpoint proofs are stored.
      *
@@ -55,6 +60,20 @@ class VerifiableExtension extends DataExtension
      * @config
      */
     private static $verifiable_fields = [];
+
+    /**
+     * Which source mode are we using?
+     *
+     * @return int
+     */
+    public function sourceMode()
+    {
+        if (method_exists($this->getOwner(), 'verify')) {
+            return self::SOURCE_MODE_FUNC;
+        }
+
+        return self::SOURCE_MODE_FIELD;
+    }
 
     /**
      * After each publish action, userland data coming from either a custom `verify()`
@@ -124,7 +143,7 @@ class VerifiableExtension extends DataExtension
         $record = $record ?: $this->getOwner();
         $verifiable = [];
 
-        if (method_exists($record, 'verify')) {
+        if ($this->sourceMode() === self::SOURCE_MODE_FUNC) {
             $verifiable = (array) $record->verify();
         } else {
             // If the "VerifiableFields" DB field is not empty, it contains a cached
@@ -160,7 +179,8 @@ class VerifiableExtension extends DataExtension
     {
         parent::updateCMSFields($fields);
 
-        Requirements::javascript('phptek/verifiable: client/verifiable.js');
+        Requirements::css('phptek/verifiable: client/dist/css/verifiable.css');
+        Requirements::javascript('phptek/verifiable: client/dist/js/verifiable.js');
 
         $owner = $this->getOwner();
         $list = $disabled = [];
