@@ -16,7 +16,7 @@
     ],
     "require": {
         "php": ">=7.0",
-        "silverstripe/cms": "4.1.0",
+        "silverstripe/versioned": "^1.1",
         "phptek/jsontext": "^2.0.0",
         "guzzlehttp/guzzle": "^6.3.3"
     },
