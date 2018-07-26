@@ -44,6 +44,7 @@ class VerifiableExtension extends DataExtension
     private static $db = [
         'Proof' => ChainpointProof::class,
         'Extra' => JSONText::class,
+        'VerifiableFields' => JSONText::class,
     ];
 
     /**
@@ -60,13 +61,31 @@ class VerifiableExtension extends DataExtension
      * method or `$verifiable_fields` config, is compiled into a string, hashed and
      * submitted to the current backend.
      *
+     * Note: We update the versions table manually to avoid double publish problem
+     * where a DO is marked internally as "changed".
+     *
      * @return void
      */
     public function onAfterPublish()
     {
-        $verifiable = $this->source();
         $owner = $this->getOwner();
+        $latest = Versioned::get_latest_version(get_class($owner), $owner->ID);
+        $table = sprintf('%s_Versions', $latest->config()->get('table_name'));
+
+        // Save the verifiable_fields to the xxx_Versioned table _before_ calling
+        // source() which itself, makes use of this data
+        DB::query(sprintf(''
+            . ' UPDATE "%s"'
+            . ' SET "VerifiableFields" = \'%s\''
+            . ' WHERE "RecordID" = %d AND "Version" = %d',
+            $table,
+            json_encode($owner->config()->get('verifiable_fields')),
+            $latest->ID,
+            $latest->Version
+        ));
+
         $this->service->setExtra();
+        $verifiable = $this->source();
         $doAnchor = (count($verifiable) && $owner->exists());
 
         if ($doAnchor && $proofData = $this->service->call('write', $verifiable)) {
@@ -74,12 +93,11 @@ class VerifiableExtension extends DataExtension
                 $proofData = json_encode($proofData);
             }
 
-            // Update the versions table manually to avoid double publish problem
-            // when a DO is marked as "changed"
-            $latest = Versioned::get_latest_version(get_class($owner), $owner->ID);
-            $table = sprintf('%s_Versions', $latest->config()->get('table_name'));
-            DB::query(sprintf(
-                'UPDATE "%s" SET "Proof" = \'%s\', Extra = \'%s\' WHERE "RecordID" = %d AND "Version" = %d',
+            DB::query(sprintf(''
+                . ' UPDATE "%s"'
+                . ' SET "Proof" = \'%s\','
+                . '     "Extra" = \'%s\''
+                . ' WHERE "RecordID" = %d AND "Version" = %d',
                 $table,
                 $proofData,
                 json_encode($this->service->getExtra()),
@@ -91,14 +109,12 @@ class VerifiableExtension extends DataExtension
 
     /**
      * Source the data that will end-up hashed and submitted. This method will
-     * call a custom verify() method on all decorated objects, if one is defined.
+     * call a custom verify() method on all decorated objects if one is defined.
      * This provides a flexible public API for hashing and verifying pretty much
-     * anything.
-     *
-     * If no such method exists, the default is to take the values of the YML
-     * config "verifiable_fields" array, then hash and submit the values of those
-     * fields. If no verifiable_fields are found or configured, we just return
-     * an empty array and just stop.
+     * anything. But if no such method exists, the default is to take the value
+     * of the YML config "verifiable_fields" array, hash and submit the values
+     * of those DB fields. If no verifiable_fields are found or configured,
+     * we just return an empty array and just stop.
      *
      * @param  DataObject $record
      * @return array
@@ -111,9 +127,18 @@ class VerifiableExtension extends DataExtension
         if (method_exists($record, 'verify')) {
             $verifiable = (array) $record->verify();
         } else {
-            $fields = $record->config()->get('verifiable_fields');
+            // If the "VerifiableFields" DB field is not empty, it contains a cached
+            // list of the field-names who's content should be sent for hashing.
+            // This means the list of fields to be verified is now _relative_ to
+            // the current version, thus any change made to YML config, will only
+            // affect versions created _after_ that change.
+            $verifiableFields = $record->config()->get('verifiable_fields');
 
-            foreach ($fields as $field) {
+            if ($cachedFields = $record->dbObject('VerifiableFields')->getStoreAsArray()) {
+                $verifiableFields = $cachedFields;
+            }
+
+            foreach ($verifiableFields as $field) {
                 if ($field === 'Proof') {
                     continue;
                 }
