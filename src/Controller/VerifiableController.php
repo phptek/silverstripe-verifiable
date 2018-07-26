@@ -63,7 +63,7 @@ class VerifiableAdminController extends Controller
      *
      * @var string
      */
-    const STATUS_VERIFIED_FAIL = 'Verified';
+    const STATUS_VERIFIED_FAIL = 'Verification Failed';
 
     /**
      * This version is unverified. If this state persists, something is not working
@@ -225,7 +225,7 @@ class VerifiableAdminController extends Controller
 
             // We've got this far. The local proof seems to be good. Let's verify
             // it against the backend
-            $response = $this->service->call('verify', $record->getField('Proof'));
+            $response = $this->service->call('verify', $record->dbObject('Proof')->getProof());
             $isVerified = ChainpointProof::create()
                     ->setValue($response)
                     ->isVerified();

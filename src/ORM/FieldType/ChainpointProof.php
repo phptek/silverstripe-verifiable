@@ -176,11 +176,11 @@ class ChainpointProof extends JSONText
         $data = $data ?? $this->getStoreAsArray();
 
         switch (true) {
-            case !empty($data['meta']):
+            case isset($data['meta']):
                 return self::MODEL_TYPE_PHR;
-            case !empty($data[0]['proof']):
+            case isset($data[0]['proof']):
                 return self::MODEL_TYPE_GPR;
-            case !empty($data[0]['proof_index']):
+            case isset($data[0]['proof_index']):
                 return self::MODEL_TYPE_PVR;
             default:
                 return 0;
