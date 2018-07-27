@@ -9,13 +9,15 @@ namespace PhpTek\Verifiable\Backend;
 
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\Factory;
+use PhpTek\Verifiable\Backend\ServiceProvider;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 
 /**
  * Constructs and returns the appropriate backend service implementation,
  * according to userland config.
  */
-class BackendServiceFactory
+class BackendServiceFactory implements Factory
 {
     use Configurable;
 
@@ -23,7 +25,7 @@ class BackendServiceFactory
      * @return ServiceProvider
      * @throws VerifiableBackendException
      */
-    public function create()
+    public function create($service, array $params = []) : ServiceProvider
     {
         $backend = strtolower($this->config()->get('backend'));
         $gtwClass = sprintf('PhpTek\Verifiable\Backend\%s\Gateway', ucfirst($backend));
