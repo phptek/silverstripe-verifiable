@@ -118,7 +118,7 @@ class VerifiableExtension extends DataExtension
                     continue;
                 }
 
-                $verifiable[] = (string) $record->getField($field);
+                $verifiable[] = strip_tags((string) $record->getField($field));
             }
         }
 
