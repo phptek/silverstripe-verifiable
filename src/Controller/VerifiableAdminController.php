@@ -14,6 +14,7 @@ use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Security;
 use SilverStripe\Security\Permission;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
+use PhpTek\Verifiable\Model\VerifiableExtension;
 
 /**
  * Accepts incoming requests for data verification e.g. from within the CMS
@@ -63,7 +64,7 @@ class VerifiableAdminController extends Controller
      *
      * @var string
      */
-    const STATUS_VERIFIED_FAIL = 'Verification Failed';
+    const STATUS_VERIFIED_FAIL = 'Verification failure';
 
     /**
      * This version is unverified. If this state persists, something is not working
@@ -123,6 +124,7 @@ class VerifiableAdminController extends Controller
         $class = $request->param('ClassName');
         $id = $request->param('ModelID');
         $version = $request->param('VersionID');
+        $verificationData = [];
 
         if (empty($id) || !is_numeric($id) ||
                 empty($version) || !is_numeric($version) ||
@@ -135,21 +137,36 @@ class VerifiableAdminController extends Controller
         }
 
         try {
-            $status = $this->getStatus($record, $record->getExtraByIndex());
+            $status = $this->getStatus($record, $record->getExtraByIndex(), $verificationData);
         } catch (ValidationException $ex) {
             $status = self::STATUS_UPSTREAM_ERROR;
         }
 
         $response = json_encode([
-            'RecordID' => "$record->RecordID",
-            'Version' => "$record->Version",
-            'Class' => get_class($record),
-            'StatusNice' => $status,
-            'StatusCode' => $this->getCodeMeta($status, 'code'),
-            'StatusDefn' => $this->getCodeMeta($status, 'defn'),
-            'SubmittedAt' => $record->dbObject('Proof')->getSubmittedAt(),
-            'SubmittedTo' => $record->dbObject('Extra')->getStoreAsArray(),
-        ], JSON_UNESCAPED_UNICODE);
+            'Record' => [
+                'RecordID' => "$record->RecordID",
+                'CreatedDate' => self::display_date($record->Created),
+                'Version' => "$record->Version",
+                'Class' => get_class($record),
+                'VerifiableFields' => $record->sourceMode() === VerifiableExtension::SOURCE_MODE_FIELD ?
+                    json_decode($record->VerifiableFields) :
+                    [],
+            ],
+            'Status' => [
+                'Nice' => $status,
+                'Code' => $this->getCodeMeta($status, 'code'),
+                'Def' => $this->getCodeMeta($status, 'defn'),
+            ],
+            'Proof' => [
+                'SubmittedDate' => self::display_date($verificationData['SubmittedAt'] ?? ''),
+                'SubmittedTo' => $record->dbObject('Extra')->getStoreAsArray(),
+                'ChainpointProof' => $verificationData['ChainpointProof'] ?? '',
+                'MerkleRoot' => $verificationData['MerkleRoot'] ?? '',
+                'BlockHeight' => $verificationData['BlockHeight'] ?? '',
+                'Hashes' => $verificationData['Hashes'] ?? '',
+                'UUID' => $verificationData['UUID'] ?? '',
+            ]
+        ], JSON_UNESCAPED_SLASHES);
 
         $this->renderJSON($response);
     }
@@ -181,7 +198,6 @@ class VerifiableAdminController extends Controller
         ];
 
         return $data[$key] ?? $data;
-
     }
 
     /**
@@ -189,11 +205,12 @@ class VerifiableAdminController extends Controller
      * account the state of the saved proof as well as by making a backend
      * verification call.
      *
-     * @param  DataObject $record The versioned record we're checking
-     * @param  array      $nodes  An array of cached chainpoint node IPs
+     * @param  DataObject $record           The versioned record we're checking.
+     * @param  array      $nodes            Array of cached chainpoint node IPs.
+     * @param  array      $verificationData Array of data for manual verification.
      * @return string
      */
-    public function getStatus($record, $nodes)
+    public function getStatus($record, $nodes, &$verificationData) : string
     {
         // Set some extra data on the service. In this case, the actual chainpoint
         // node addresses, used to submit hashes for the given $record
@@ -225,10 +242,9 @@ class VerifiableAdminController extends Controller
 
             // We've got this far. The local proof seems to be good. Let's verify
             // it against the backend
-            $response = $this->service->call('verify', $record->dbObject('Proof')->getProof());
-            $isVerified = ChainpointProof::create()
-                    ->setValue($response)
-                    ->isVerified();
+            $response = $this->service->call('verify', $proof->getProof());
+            $responseModel = ChainpointProof::create()->setValue($response);
+            $isVerified = $responseModel->isVerified();
 
             if (!$isVerified) {
                 return self::STATUS_VERIFIED_FAIL;
@@ -236,13 +252,24 @@ class VerifiableAdminController extends Controller
 
             // OK, so we have an intact local full proof, let's ensure it still
             // matches a hash of the data it purports to represent
-            $remoteHash = ChainpointProof::create()
-                    ->setValue($response)
-                    ->getHash();
+            $remoteHash = $responseModel->getHash();
+            $reCalculated = $this->service->hash($record->source());
 
-            if ($this->service->hash($record->source()) !== $remoteHash) {
+            if ($reCalculated !== $remoteHash) {
                 return self::STATUS_LOCAL_HASH_INVALID;
             }
+
+            // Setup data for display & manual re-verification
+            $v3proof = ChainpointProof::create()->setValue($proof->getProofJson());
+            $verificationData['ChainpointProof'] = $proof->getProofJson(true);
+            $verificationData['MerkleRoot'] = $v3proof->getMerkleRoot('btc');
+            $verificationData['BlockHeight'] = $v3proof->getBitcoinBlockHeight();
+            $verificationData['UUID'] = $v3proof->getHashIdNode();
+            $verificationData['SubmittedAt'] = $v3proof->getSubmittedAt();
+            $verificationData['Hashes'] = [
+                'local' => $reCalculated,
+                'remote' => $v3proof->getHash(),
+            ];
 
             // All is well. As you were...
             return self::STATUS_VERIFIED_OK;
@@ -263,6 +290,16 @@ class VerifiableAdminController extends Controller
         header('Content-Type: application/json');
         echo $json;
         exit(0);
+    }
+
+    /**
+     * Common date format in ISO 8601.
+     *
+     * @return string
+     */
+    private static function display_date(string $date) : string
+    {
+        return date('Y-m-d H:i:s', strtotime($date));
     }
 
 }

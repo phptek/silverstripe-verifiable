@@ -28,7 +28,8 @@ In addition to processing and persisting value-based transactions in their nativ
 
 ## Requirements
 
-At least PHP7 and SilverStripe 4.
+* At least PHP7 and SilverStripe 4.
+* Your PHP setup also needs Zlib and [msgpack](https://msgpack.org/). These are required to decode the binary format proof returned from most Tierion REST API calls, into a valid JSON-LD v3 Chainpoint Proof.
 
 ## Install
 
@@ -93,3 +94,4 @@ You'll also need to install a simple cron job on your hosting environment which 
 * [Trustworthy technology: The future of digital archives](https://blog.nationalarchives.gov.uk/blog/trustworthy-technology-future-digital-archives/)
 * [Xero Integrates With Tierion To Secure Accounting Data Using Chainpoint](https://blog.tierion.com/2018/04/19/xero-integrates-with-tierion-to-secure-accounting-data-using-chainpoint/)
 * [The ChainPoint Standard](https://chainpoint.org/)
+* [The ChainPoint Whitepaper](https://github.com/chainpoint/whitepaper/blob/master/chainpoint_white_paper.pdf)
