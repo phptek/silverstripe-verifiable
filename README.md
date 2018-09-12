@@ -24,7 +24,7 @@ With the most basic configuration; on each write-operation, a sha256 hash of sel
 
 The two systems that we are aware of that fit the bill as servicable Merkle backends are; public blockchains (notably Bitcoin and Ethereum) and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
 
-In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing arbitrary data of a limited size. This makes them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. The module makes use of REST calls to the [Tierion](https://tierion.com/) blockchain network using its [Chainpoint](https://chainpoint.org) service. Tierion is itself a permissionless blockchain network which will automatically and periodically writes Merkle Root hashes to both Bitcoin and Ethereum.
+In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing arbitrary data of a limited size. This makes them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. The module makes use of REST calls to the [Chainpoint](https://chainpoint.org/) Network. Chainpoint periodically writes Merkle Root hashes to the Bitcoin blockchain.
 
 ## Requirements
 
@@ -92,4 +92,4 @@ You'll also need to install a simple cron job on your hosting environment which 
 
 * [Trustworthy technology: The future of digital archives](https://blog.nationalarchives.gov.uk/blog/trustworthy-technology-future-digital-archives/)
 * [Xero Integrates With Tierion To Secure Accounting Data Using Chainpoint](https://blog.tierion.com/2018/04/19/xero-integrates-with-tierion-to-secure-accounting-data-using-chainpoint/)
-* [The ChainPoint Standard](https://chainpoint.org/)
+* [The Chainpoint Protocol](https://chainpoint.org/)
