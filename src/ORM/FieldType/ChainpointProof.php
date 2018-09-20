@@ -8,6 +8,8 @@
 namespace PhpTek\Verifiable\ORM\FieldType;
 
 use PhpTek\JSONText\ORM\FieldType\JSONText;
+use PhpTek\Verifiable\Exception\VerifiableBackendException;
+use Blockchain\Blockchain;
 
 /**
  * Encapsulates a single chainpoint proof as returned by the currently active Merkle
@@ -15,6 +17,8 @@ use PhpTek\JSONText\ORM\FieldType\JSONText;
  *
  * Makes use of the {@link JSONText} package and wraps simple queries around
  * its raw JSONQuery calls.
+ *
+ * @todo Switch all refs to VerifiableBackendException for a new VerifiableChainpointException
  */
 class ChainpointProof extends JSONText
 {
@@ -63,6 +67,32 @@ class ChainpointProof extends JSONText
 
         if (!empty($value = $this->query('$..proof'))) {
             return $value[0];
+        }
+
+        return '';
+    }
+
+    /**
+     * Return a valid v3 JSON-LD Chainpoint Proof; The value of the proof field
+     * in JSON-LD format.
+     *
+     * @return string
+     * @throws VerifiableBackendException
+     */
+    public function getProofJson() : string
+    {
+        if (!function_exists('zlib_decode')) {
+            throw new VerifiableBackendException('zlib is not enabled!');
+        }
+
+        if (!function_exists('msgpack_unpack')) {
+            throw new VerifiableBackendException('msgpack extension is not enabled!');
+        }
+
+        if ($proof = $this->getProof()) {
+            $data = msgpack_unpack(zlib_decode(base64_decode($proof)));
+
+            return str_replace('\\/', '/', json_encode($data, JSON_PRETTY_PRINT));
         }
 
         return '';
@@ -131,20 +161,48 @@ class ChainpointProof extends JSONText
     }
 
     /**
-     * Returns all the "anchor" objects for the currently stored proof.
+     * Returns all the "anchors" objects for the currently stored proof.
      *
+     * @param  string $type Leave empty to get all "anchors" objects.
      * @return array
      */
-    public function getAnchors() : array
+    public function getAnchors(string $type = '') : array
     {
         $this->setReturnType('array');
-        $value = $this->query('$..anchors');
+
+        if ($type === 'cal') {
+            $query = '$..branches..ops..anchors';
+        } else if ($type === 'btc') {
+            $query = '$..branches..branches..ops..anchors';
+        } else {
+            $query = '$..anchors';
+        }
+
+        $value = $this->query($query);
 
         if (!empty($value)) {
             return $value[0];
         }
 
         return [];
+    }
+
+    /**
+     * Return the Merkle Root from a remote URI.
+     *
+     * @param  string $type One of 'cal' or 'btc'
+     * @return string
+     * @throws VerifiableBackendException
+     */
+    public function getMerkleRoot(string $type = 'cal') : string
+    {
+        if ($anchor = $this->getAnchors($type)) {
+            if (!empty($anchor[0]['uris'][0])) {
+                return file_get_contents($anchor[0]['uris'][0]);
+            }
+        }
+
+        throw new VerifiableBackendException('No Merkle Root found!');
     }
 
     /**
@@ -203,6 +261,37 @@ class ChainpointProof extends JSONText
     }
 
     /**
+     * Returns the Bitcoin specific branch
+     *
+     * @return array
+     */
+    public function getBitcoinOps() : array
+    {
+        $this->setReturnType('array');
+
+        // PostHashResponse
+        $field = 'branches..branches';
+
+        if (!empty($value = $this->query('->>', $field))) {
+            if (preg_match('#^btc#', $value[$field][0]['label'])) {
+                return $value[$field][0]['ops'];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Returns the Ethereum specific branch
+     *
+     * @return string
+     */
+    public function getEthereumOps() : string
+    {
+        throw new \Exception('NOOP');
+    }
+
+    /**
      * "Pending" is an official name for a particular response format. This method
      * will tell us if the format of the stored proof is of the type that a node
      * will immediately return upon receiving a GET request to the /proofs
@@ -242,6 +331,21 @@ class ChainpointProof extends JSONText
     public function isVerified() : bool
     {
         return $this->getModelType() === self::MODEL_TYPE_PVR && $this->getStatus() === 'verified';
+    }
+
+    /**
+     * Return the Bitcoin block height, if one exists.
+     *
+     * @return string
+     * @throws VerifiableBackendException
+     */
+    public function getBitcoinBlockHeight() : string
+    {
+        if (!$anchors = $this->getAnchors('btc')) {
+            throw new VerifiableBackendException('No BTC block data found!');
+        }
+
+        return $anchors[0]['anchor_id'];
     }
 
 }

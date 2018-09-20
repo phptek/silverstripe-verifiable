@@ -28,7 +28,8 @@ In addition to processing and persisting value-based transactions in their nativ
 
 ## Requirements
 
-At least PHP7 and SilverStripe 4.
+* At least PHP7 and SilverStripe 4.
+* Your PHP setup also needs Zlib and [msgpack](https://msgpack.org/). These are required to decode the binary format proof returned from most Tierion REST API calls, into a valid JSON-LD v3 Chainpoint Proof.
 
 ## Install
 
@@ -84,6 +85,9 @@ class MyDataObject extends DataObject
 
 Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.
 
+To view generated SVG Chainpoint visualisations in the admin UI, you'll need to ensure that `svg` is a legitimate file-suffix to use in SilverStripe
+by editing `public/assets/.htaccess` (Apache users only).
+
 You'll also need to install a simple cron job on your hosting environment which invokes `UpdateProofController`. This will do the job of periodically querying the backend for a full-proof (Chainpoint backend only).
 
     ./vendor/bin/sake verifiable/tools/update
@@ -93,3 +97,4 @@ You'll also need to install a simple cron job on your hosting environment which 
 * [Trustworthy technology: The future of digital archives](https://blog.nationalarchives.gov.uk/blog/trustworthy-technology-future-digital-archives/)
 * [Xero Integrates With Tierion To Secure Accounting Data Using Chainpoint](https://blog.tierion.com/2018/04/19/xero-integrates-with-tierion-to-secure-accounting-data-using-chainpoint/)
 * [The Chainpoint Protocol](https://chainpoint.org/)
+* [The ChainPoint Whitepaper](https://github.com/chainpoint/whitepaper/blob/master/chainpoint_white_paper.pdf)

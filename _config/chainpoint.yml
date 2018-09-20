@@ -14,5 +14,5 @@ PhpTek\Verifiable\Backend\Chainpoint\Gateway:
   direct_verification: false
   # How many nodes do we send hashes to?
   # Note: The higher this is, the more HTTP requests need to be made to the
-  # Tierion network when saving/publishing content.
+  # Chainpoint network when saving/publishing content.
   discover_node_count: 3
