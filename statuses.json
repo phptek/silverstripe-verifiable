@@ -1,11 +1,11 @@
 [
-    {"STATUS_VERIFIED_OK":"All verification checks passed. This version's hash and proof are intact and verified."},
+    {"STATUS_VERIFIED_OK":"All verification checks have passed. This version's hash and proof are intact and verified."},
     {"STATUS_VERIFIED_FAIL":"Some or all verification checks failed. This version's hash and proof are not intact. Evidence that the record has been tampered-with."},
     {"STATUS_UNVERIFIED":"This version is unverified. If this state persists, something is not working correctly. Please consult your developer."},
-    {"STATUS_PENDING":"This version's hash confirmation is currently pending. If it's been more than two hours since submission, try again."},
-    {"STATUS_INITIAL":"This version's hash confirmation is currently awaiting processing. If it's been more than two hours since submission, please check the automated update job. Consult your developer."},
-    {"STATUS_UPSTREAM_ERROR":"The verification process encountered a network error communicating with the backend. Try again in a moment."},
+    {"STATUS_PENDING":"This version's confirmation is currently pending. If it's been more than two hours since submission, try again."},
+    {"STATUS_INITIAL":"This version's confirmation is currently awaiting processing. If it's been more than two hours since submission, please check the automated update job. Consult your developer."},
+    {"STATUS_UPSTREAM_ERROR":"The verification process has encountered a network error. Try again in a moment."},
     {"STATUS_LOCAL_PROOF_NONE":"No local proof was found for this version. If this is the first version, you can safely ignore this message. Otherwise, this is evidence that this version has been tampered-with."},
-    {"STATUS_LOCAL_HASH_INVALID":"A mismatch exists between the stored hash for this version, and the data the hash was generated from. Evidence that the record has been tampered-with."},
-    {"STATUS_LOCAL_COMPONENT_INVALID":"One or more key components of the local proof, were found to be invalid. Evidence that the record has been tampered-with."}
+    {"STATUS_LOCAL_HASH_INVALID":"A mismatch exists between the stored hash for this version, and the source-data the hash was generated from. Evidence that the record has been tampered-with."},
+    {"STATUS_LOCAL_COMPONENT_INVALID":"One or more components of the local proof were found to be invalid. Evidence that the record has been tampered-with."}
 ]
