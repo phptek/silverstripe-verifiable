@@ -195,7 +195,7 @@ class VerifiableExtension extends DataExtension
         }
 
         $fields->addFieldsToTab('Root.Verify', FieldList::create([
-            LiteralField::create('Introduction', '<p class="message">Select a version'
+            LiteralField::create('Introduction', '<p class="message intro">Select a version'
                     . ' whose data you wish to verify, then select the "Verify"'
                     . ' button. After a few seconds, a verification status will be'
                     . ' displayed.</p>'),

@@ -15,7 +15,6 @@ use SilverStripe\Security\Security;
 use SilverStripe\Security\Permission;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 use PhpTek\Verifiable\Model\VerifiableExtension;
-use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use Dcentrica\Viz\ChainpointViz;
 
 /**

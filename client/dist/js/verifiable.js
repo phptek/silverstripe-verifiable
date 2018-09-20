@@ -38,6 +38,8 @@ const backend = 'btc';
                     
                     $.get(controllerUrl)
                         .done(function(data) {
+                            $('.message.intro').remove();
+                            
                             let message = '';
                             let isInitialOrPending = (
                                 data.Status.Code === 'STATUS_INITIAL' ||
