@@ -152,13 +152,14 @@ class UpdateProofController extends Controller
             $response = $this->service->call('read', $uuid);
         } catch (VerifiableValidationException $e) {
             $this->log('ERROR', $e->getMessage());
+
+            return;
         }
 
-        $isFull = ChainpointProof::create()
-                ->setValue($response)
-                ->isFull();
+        $proof = ChainpointProof::create()
+                ->setValue($response);
 
-        if ($isFull) {
+        if ($proof && $proof->isFull()) {
             $this->log('NOTICE', "Full proof fetched. Updating record ID #{$record->RecordID} and version {$record->Version}");
             $this->doUpdate($record, $record->Version, $response);
         } else {
