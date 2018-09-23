@@ -99,10 +99,6 @@ const backend = 'btc';
                 e.preventDefault();
                 $('.message.bad.manual').remove();
                 $('.extra-data').toggleClass('hide');
-                
-                    // TEST (TODO: Remove!)
-                    let prf = JSON.parse($('#receipt').text());
-                    chainpointParse.parse(prf);
             }
         });
         
