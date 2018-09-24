@@ -1,8 +1,8 @@
-.extra-data .left {
+.verifiable-extra-data .left {
     height: 250px;
 }
 
-.extra-data .right .container {
+.verifiable-extra-data .right .container {
     height: 225px;
     padding: 5px;
     overflow: auto;
@@ -12,9 +12,10 @@
 }
 
 .verifiable-fields-table {
-    width: 50%;
+    width: 100%;
     background: #CCC;
     border: solid 1px #333;
+    margin-bottom: 1.2308rem;
 }
 
 .verifiable-fields-table th,
@@ -25,8 +26,9 @@
     text-align: left;
 }
 
-.message {
+.message > p.message {
     padding: 1.25rem 1.25rem;
+    margin: .65rem 0 1.1rem;
 }
 
 .message .font-icon-cog::before {
@@ -40,7 +42,6 @@
     height: 300px;
     overflow: auto;
     margin-bottom: 15px;
-    padding: 10px;
     unicode-bidi: embed;
     font-family: monospace;
     white-space: pre-wrap;

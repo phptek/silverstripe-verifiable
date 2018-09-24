@@ -26,6 +26,10 @@ The two systems that we are aware of that fit the bill as servicable Merkle back
 
 In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing arbitrary data of a limited size. This makes them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. The module makes use of REST calls to the [Chainpoint](https://chainpoint.org/) Network. Chainpoint periodically writes Merkle Root hashes to the Bitcoin blockchain.
 
+![alt text](doc/img/screenshot-asset-admin-ss4.2.png "Screenshot from SilverStripe 4.2 asset admin")
+
+![alt text](doc/img/screenshot-page-admin-ss4.2.png "Screenshot from SilverStripe 4.2 page admin")
+
 ## Requirements
 
 * At least PHP7 and SilverStripe 4.
@@ -51,6 +55,22 @@ Add the `VerifiableExtension` to each data-model that you'd like to be "Verifiab
 My\Name\Space\Model\MyModel:
   extensions:
     - PhpTek\Verifiable\Model\VerifiableExtension
+```
+
+And for SilverStripe 4 `File` classes:
+
+```YML
+SilverStripe\Assets\File:
+  extensions:
+    - SilverStripe\Versioned\Versioned
+    - PhpTek\Verifiable\Model\VerifiableExtension
+SilverStripe\Assets\Image:
+  extensions:
+    - SilverStripe\Versioned\Versioned
+    - PhpTek\Verifiable\Model\VerifiableExtension
+SilverStripe\AssetAdmin\Forms\FileFormFactory:
+  extensions:
+    - PhpTek\Verifiable\Model\VerifiableFileExtension
 ```
 
 By default, any fields on your decorated model(s) that you define in the `verifiable_fields` array, will be hashed and submitted to the backend thus:

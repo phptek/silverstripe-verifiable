@@ -15,9 +15,9 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\HiddenField;
 use PhpTek\JSONText\ORM\FieldType\JSONText;
-use SilverStripe\View\Requirements;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\DataObject;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass, it will therefore
@@ -89,7 +89,7 @@ class VerifiableExtension extends DataExtension
     {
         $owner = $this->getOwner();
         $latest = Versioned::get_latest_version(get_class($owner), $owner->ID);
-        $table = sprintf('%s_Versions', $latest->config()->get('table_name'));
+        $table = sprintf('%s_Versions', $latest->baseTable());
 
         // Save the verifiable_fields to the xxx_Versioned table _before_ calling
         // source() which itself, makes use of this data
@@ -170,7 +170,7 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
-     * Adds a "Verification" tab to the CMS.
+     * Adds a "Verification" tab to {@link SiteTree} objects in the framework UI.
      *
      * @param  FieldList $fields
      * @return void
@@ -179,34 +179,18 @@ class VerifiableExtension extends DataExtension
     {
         parent::updateCMSFields($fields);
 
-        Requirements::css('phptek/verifiable: client/dist/css/verifiable.css');
-        Requirements::javascript('phptek/verifiable: client/dist/js/verifiable.js');
+        $this->updateAdminForm($fields);
+    }
 
-        $owner = $this->getOwner();
-        $list = $disabled = [];
-        $versions = $owner->Versions()->sort('Version');
-
-        foreach ($versions as $item) {
-            if ($item->Version == 1) {
-                $disabled[] = $item->Version;
-            }
-
-            $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->Created);
-        }
-
-        $fields->addFieldsToTab('Root.Verify', FieldList::create([
-            LiteralField::create('Introduction', '<p class="message intro">Select a version'
-                    . ' whose data you wish to verify, then select the "Verify"'
-                    . ' button. After a few seconds, a verification status will be'
-                    . ' displayed.</p>'),
-            HiddenField::create('Type', null, get_class($owner)),
-            DropdownField::create('Version', 'Version', $list)
-                ->setEmptyString('-- Select One --')
-                ->setDisabledItems($disabled),
-            FormAction::create('doVerify', 'Verify')
-                ->setUseButtonTag(true)
-                ->addExtraClass('btn action btn-outline-primary ')
-        ]));
+    /**
+     * Adds a "Verification" tab to {@link File} objects in the framework UI.
+     *
+     * @param  FieldList $fields
+     * @return void
+     */
+    public function updateFormFields(FieldList $fields, $controller, $formName, $record)
+    {
+        $this->updateAdminForm($fields, $record);
     }
 
     /**
@@ -229,6 +213,44 @@ class VerifiableExtension extends DataExtension
         }
 
         return [];
+    }
+
+    /**
+     * @param  FieldList  $fields
+     * @param  array      $record If passed, the data-model is likely a {@link File}
+     *                            subclass, meaning that $this->getOwner() is not
+     *                            going to be a {@link DataObject} subclass.
+     * @return void
+     */
+    private function updateAdminForm(FieldList $fields, array $record = null)
+    {
+        $owner = $record ? $record['Record'] : $this->getOwner();
+        $tabRootName = $record ? 'Editor' : 'Root';
+        $list = $disabled = [];
+        $versions = $owner->Versions()->sort('Version');
+
+        // Build the menu of versioned objects
+        foreach ($versions as $item) {
+            if ($item->Version == 1) {
+                $disabled[] = $item->Version;
+            }
+
+            $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->Created);
+        }
+
+        $fields->addFieldsToTab($tabRootName . '.Verify', FieldList::create([
+            LiteralField::create('Introduction', '<p class="message intro">Select a version'
+                    . ' whose data you wish to verify, then select the "Verify"'
+                    . ' button. After a few seconds, a verification status will be'
+                    . ' displayed.</p>'),
+            HiddenField::create('Type', null, get_class($owner)),
+            DropdownField::create('Version', 'Version', $list)
+                ->setEmptyString('-- Select One --')
+                ->setDisabledItems($disabled),
+            FormAction::create('doVerify', 'Verify')
+                ->setUseButtonTag(true)
+                ->addExtraClass('btn action btn-outline-primary ')
+        ]));
     }
 
 }
