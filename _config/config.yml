@@ -17,3 +17,13 @@ PhpTek\Verifiable\Controller\VerifiableAdminController:
 PhpTek\Verifiable\Controller\UpdateProofController:
   dependencies:
     service: '%$BackendService'
+    
+SilverStripe\Admin\LeftAndMain:
+  extra_requirements_css:
+    - 'vendor/phptek/verifiable/client/dist/css/verifiable.css'
+  extra_requirements_javascript:
+    - 'vendor/phptek/verifiable/client/dist/js/verifiable.js'
+
+SilverStripe\Assets\File:
+  allowed_extensions:
+    - svg

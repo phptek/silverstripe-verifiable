@@ -18,12 +18,13 @@ use SilverStripe\Versioned\Versioned;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 use PhpTek\Verifiable\Model\VerifiableExtension;
 use PhpTek\Verifiable\Exception\VerifiableValidationException;
+use SilverStripe\Security\Permission;
 
 /**
  * Controller available to CLI or XHR requests for updating all or selected versionable
  * object versions with full-proofs.
  *
- * @todo Check with Tierion API docs: How many nodes should be submitted to? And why if I submit to only one, does the network not synchronise it?
+ * @todo Check with Chainpoint API docs: How many nodes should be submitted to?
  * @todo Only fetch versions that have unique proof values
  * @todo Declare a custom Monolog\Formatter\FormatterInterface and refactor log() method
  */
@@ -41,13 +42,19 @@ class UpdateProofController extends Controller
             throw new \Exception(sprintf('Cannot use %s backend with %s!', $backend, __CLASS__));
         }
 
+        if (!Director::is_cli() && !Permission::check('ADMIN')) {
+            throw new \Exception('You do not have permission to access this controller');
+        }
+
         $class = $request->getVar('Class') ?? '';
         $recordId = $request->getVar('ID') ?? 0;
         $version = $request->getVar('Version') ?? 0;
 
+        // Process one specific record + version
         if ($class && $recordId && $version) {
             $this->log('NOTICE', 'Start: Processing single proof...', 2);
             $this->updateVersion($class, $recordId, $version);
+        // Process everything
         } else {
             $this->log('NOTICE', 'Start: Processing all proofs...', 2);
 
@@ -109,7 +116,13 @@ class UpdateProofController extends Controller
                 $versions = Versioned::get_all_versions($class, $item->ID)->sort('Version ASC');
 
                 foreach ($versions as $record) {
-                    if (!$proof = $record->dbObject('Proof')) {
+                    try {
+                        if (!$proof = $record->dbObject('Proof')) {
+                            $this->log('NOTICE', "Skipping proof for record #{$item->ID} (None found)");
+                            continue;
+                        }
+                    } catch (\Exception $e) {
+                        $this->log('NOTICE', "Skipping proof for record #{$item->ID} (Bad data)");
                         continue;
                     }
 
@@ -138,11 +151,9 @@ class UpdateProofController extends Controller
      */
     protected function process($record, $proof)
     {
-        // I don't understand the Tierion network... if we submit a hash to one IP
-        // the rest of the network is not updated. So we need to pre-seed the service
-        // with the saved nodes...unless it's only verified proofs that get propagated..??
-        $nodes = $record->dbObject('Extra')->getStoreAsArray();
         $uuid = $proof->getHashIdNode()[0];
+        // Pre-seed the service with the saved nodes...unless it's only verified proofs that get propagated..??
+        $nodes = $record->dbObject('Extra')->getStoreAsArray();
         $this->service->setExtra($nodes);
 
         $this->log('NOTICE', sprintf("\tCalling cached node: %s/proofs/%s", $nodes[0], $uuid));
@@ -176,7 +187,7 @@ class UpdateProofController extends Controller
      */
     protected function doUpdate($object, $version, $proof)
     {
-        $table = sprintf('%s_Versions', $object->config()->get('table_name'));
+        $table = sprintf('%s_Versions', $object->baseTable());
         $sql = sprintf(
             'UPDATE "%s" SET "Proof" = \'%s\' WHERE "RecordID" = %d AND "Version" = %d',
             $table,

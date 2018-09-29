@@ -127,9 +127,18 @@ class VerifiableAdminController extends Controller
         $version = $request->param('VersionID');
         $verificationData = [];
 
-        if (empty($id) || !is_numeric($id) ||
+        if (
+                empty($id) || !is_numeric($id) ||
                 empty($version) || !is_numeric($version) ||
-                empty($class)) {
+                empty($class)
+            ) {
+            return $this->httpError(400, 'Bad request');
+        }
+
+        // Class is passed as dash-separated FQCN
+        $class = str_replace('-', '\\', $class);
+
+        if (!class_exists($class)) {
             return $this->httpError(400, 'Bad request');
         }
 
