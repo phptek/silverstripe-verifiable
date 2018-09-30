@@ -90,6 +90,10 @@ class VerifiableExtension extends DataExtension
         $owner = $this->getOwner();
         $latest = Versioned::get_latest_version(get_class($owner), $owner->ID);
         $table = sprintf('%s_Versions', $latest->baseTable());
+        // Could be a bug with SilverStripe\Config: Adding VerifiableExtension to both
+        // Assets\File and Assets\Image, results in x2 "Title" fields, even though
+        // Assets\Image's table has no such field.
+        $verifiableFields = array_unique($owner->config()->get('verifiable_fields'));
 
         // Save the verifiable_fields to the xxx_Versioned table _before_ calling
         // source() which itself, makes use of this data
@@ -98,7 +102,7 @@ class VerifiableExtension extends DataExtension
             . ' SET "VerifiableFields" = \'%s\''
             . ' WHERE "RecordID" = %d AND "Version" = %d',
             $table,
-            json_encode($owner->config()->get('verifiable_fields')),
+            json_encode($verifiableFields),
             $latest->ID,
             $latest->Version
         ));
@@ -128,12 +132,12 @@ class VerifiableExtension extends DataExtension
 
     /**
      * Source the data that will end-up hashed and submitted. This method will
-     * call a custom verify() method on all decorated objects if one is defined.
-     * This provides a flexible public API for hashing and verifying pretty much
-     * anything. But if no such method exists, the default is to take the value
-     * of the YML config "verifiable_fields" array, hash and submit the values
-     * of those DB fields. If no verifiable_fields are found or configured,
-     * we just return an empty array and just stop.
+     * call a custom verify() method on all decorated objects if one is defined,
+     * providing a flexible API for hashing and verifying pretty much
+     * anything. If no such method exists, the default is to take the value
+     * of the YML config "verifiable_fields" array, then hash and submit the values
+     * of those DB fields. If no verifiable_fields are configured, we return an
+     * empty array.
      *
      * @param  DataObject $record
      * @return array

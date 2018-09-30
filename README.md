@@ -6,7 +6,7 @@
 
 ## What is this?
 
-A configurable content verification module for SilverStripe applications. It provides independent and programmable data integrity verification features to content authors and developers. Data can be verified independently and at any time.
+A configurable content verification module for SilverStripe applications. It provides independent data-integrity verification features to content authors and developers. Data can be verified independently of SilverStripe and at any time.
 
 ## Background
 
