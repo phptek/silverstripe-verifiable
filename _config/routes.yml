@@ -7,5 +7,5 @@ After:
 
 SilverStripe\Control\Director:
   rules:
-    'verifiable/tools/update': 'PhpTek\Verifiable\Controller\UpdateProofController'
-    'verifiable//$Action/$ClassName/$ModelID/$VersionID': 'PhpTek\Verifiable\Controller\VerifiableAdminController'
+    'verifiable/tools/update': 'PhpTek\Verifiable\Control\UpdateProofController'
+    'verifiable//$Action/$ClassName/$ModelID/$VersionID': 'PhpTek\Verifiable\Control\VerifiableAdminController'

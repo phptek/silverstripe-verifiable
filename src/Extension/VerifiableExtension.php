@@ -5,7 +5,7 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Model;
+namespace PhpTek\Verifiable\Extension;
 
 use SilverStripe\ORM\DataExtension;
 use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
@@ -18,6 +18,8 @@ use PhpTek\JSONText\ORM\FieldType\JSONText;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Assets\File;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass, it will therefore
@@ -28,7 +30,7 @@ use SilverStripe\ORM\DataObject;
  * If no `verify()` method is detected, the fallback is to assume that selected
  * fields on your data model should be combined and hashed. For this to work,
  * declare a `verifiable_fields` array in YML config. All subsequent publish actions
- * will be passed through here via {@link $this->onBeforeWrite()}.
+ * will be passed through here via {@link $this->onAfterPublish()}.
  *
  * This {@link DataExtension} also provides a single field to which all verified
  * and verifiable chainpoint proofs are stored in a queryable JSON-aware field.
@@ -111,6 +113,7 @@ class VerifiableExtension extends DataExtension
         $verifiable = $this->source();
         $doAnchor = (count($verifiable) && $owner->exists());
 
+        // The actual hashing takes place in the currently active service's 'call()' method
         if ($doAnchor && $proofData = $this->service->call('write', $verifiable)) {
             if (is_array($proofData)) {
                 $proofData = json_encode($proofData);
@@ -136,13 +139,15 @@ class VerifiableExtension extends DataExtension
      * providing a flexible API for hashing and verifying pretty much
      * anything. If no such method exists, the default is to take the value
      * of the YML config "verifiable_fields" array, then hash and submit the values
-     * of those DB fields. If no verifiable_fields are configured, we return an
-     * empty array.
+     * of those DB fields. If the versioned object is a File or a File subclass, then
+     * the contents of the file are also hashed.
+     *
+     * When no verifiable_fields are configured, we just return an empty array.
      *
      * @param  DataObject $record
      * @return array
      */
-    public function source($record = null) : array
+    public function source(DataObject $record = null) : array
     {
         $record = $record ?: $this->getOwner();
         $verifiable = [];
@@ -168,6 +173,11 @@ class VerifiableExtension extends DataExtension
 
                 $verifiable[] = strip_tags((string) $record->getField($field));
             }
+        }
+
+        // If the record is a `File` then also push some of its facets too
+        if ($record->exists() && in_array($record->ClassName, ClassInfo::subclassesFor(File::class))) {
+            array_push($verifiable, $record->getString(), $record->Name);
         }
 
         return $verifiable;
@@ -239,7 +249,8 @@ class VerifiableExtension extends DataExtension
                 $disabled[] = $item->Version;
             }
 
-            $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->Created);
+            // Use "LastEdited" date because it is modified and pushed to xxx_Versions at publish-time
+            $list[$item->Version] = sprintf('Version: %s (Created: %s)', $item->Version, $item->LastEdited);
         }
 
         $fields->addFieldsToTab($tabRootName . '.Verify', FieldList::create([

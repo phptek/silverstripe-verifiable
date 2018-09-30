@@ -6,15 +6,15 @@ SilverStripe\Core\Injector\Injector:
   BackendService:
     factory: PhpTek\Verifiable\Backend\BackendServiceFactory
 
-PhpTek\Verifiable\Model\VerifiableExtension:
+PhpTek\Verifiable\Extension\VerifiableExtension:
   dependencies:
     service: '%$BackendService'
     
-PhpTek\Verifiable\Controller\VerifiableAdminController:
+PhpTek\Verifiable\Control\VerifiableAdminController:
   dependencies:
     service: '%$BackendService'
     
-PhpTek\Verifiable\Controller\UpdateProofController:
+PhpTek\Verifiable\Control\UpdateProofController:
   dependencies:
     service: '%$BackendService'
     

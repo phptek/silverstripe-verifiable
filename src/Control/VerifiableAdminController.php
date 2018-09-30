@@ -5,7 +5,7 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Controller;
+namespace PhpTek\Verifiable\Control;
 
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
@@ -14,7 +14,7 @@ use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Security;
 use SilverStripe\Security\Permission;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
-use PhpTek\Verifiable\Model\VerifiableExtension;
+use PhpTek\Verifiable\Extension\VerifiableExtension;
 use Dcentrica\Viz\ChainpointViz;
 
 /**

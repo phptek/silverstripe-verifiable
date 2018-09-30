@@ -54,7 +54,7 @@ Add the `VerifiableExtension` to each data-model that you'd like to be "Verifiab
 ```YML
 My\Name\Space\Model\MyModel:
   extensions:
-    - PhpTek\Verifiable\Model\VerifiableExtension
+    - PhpTek\Verifiable\Extension\VerifiableExtension
 ```
 
 And for SilverStripe 4 `File` classes:
@@ -63,11 +63,7 @@ And for SilverStripe 4 `File` classes:
 SilverStripe\Assets\File:
   extensions:
     - SilverStripe\Versioned\Versioned
-    - PhpTek\Verifiable\Model\VerifiableExtension
-SilverStripe\Assets\Image:
-  extensions:
-    - SilverStripe\Versioned\Versioned
-    - PhpTek\Verifiable\Model\VerifiableExtension
+    - PhpTek\Verifiable\Extension\VerifiableExtension
 SilverStripe\AssetAdmin\Forms\FileFormFactory:
   extensions:
     - PhpTek\Verifiable\Model\VerifiableFileExtension
@@ -82,7 +78,11 @@ My\Name\Space\Model\MyModel:
     - Content
 ```
 
-You can supply your own data to be hashed and submitted. Developers simply declare a `verify()` method on any `DataObject` subclass that is decorated with `VerifiableExtension`, and its return value will be hashed and submitted to the backend. E.g:
+When `verifiable_fields` are declared on `File` classes and subclasses, then content of the file itself is also taken into account and will comprise
+the generated hash, as well as the values of each DB field.
+
+Developers can also supply their own data to be hashed and submitted. Simply declare a `verify()` method on any `DataObject` subclass that is decorated with `VerifiableExtension`
+and its return value will be hashed and submitted to the backend. E.g:
 
 ```PHP
 class MyDataObject extends DataObject
@@ -111,6 +111,14 @@ by editing `public/assets/.htaccess` (Apache users only).
 You'll also need to install a simple cron job on your hosting environment which invokes `UpdateProofController`. This will do the job of periodically querying the backend for a full-proof (Chainpoint backend only).
 
     ./vendor/bin/sake verifiable/tools/update
+
+## Known Issues and Caveats
+
+### Version 1.x
+
+* For `File` objects, only the contents of the _original file_ and its file name are hashed along with any `verifiable_fields` present. For all resized images
+  present in your system, changes to these will not be flagged as evidence of tampering. Only changes to the original are accounted for.
+* Note that when publishing content, `SiteTree` or otherwise, a slight delay will occur due to the required network requests to the Chainpoint network.
 
 ## Background Reading
 

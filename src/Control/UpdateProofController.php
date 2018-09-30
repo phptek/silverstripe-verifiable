@@ -5,7 +5,7 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Controller;
+namespace PhpTek\Verifiable\Control;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Control\HTTPRequest;
@@ -16,7 +16,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Control\Director;
 use SilverStripe\Versioned\Versioned;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
-use PhpTek\Verifiable\Model\VerifiableExtension;
+use PhpTek\Verifiable\Extension\VerifiableExtension;
 use PhpTek\Verifiable\Exception\VerifiableValidationException;
 use SilverStripe\Security\Permission;
 
@@ -174,7 +174,7 @@ class UpdateProofController extends Controller
             $this->log('NOTICE', "Full proof fetched. Updating record ID #{$record->RecordID} and version {$record->Version}");
             $this->doUpdate($record, $record->Version, $response);
         } else {
-            $this->log('WARN', "\t\tNo full proof found for record ID #{$record->RecordID} and version {$record->Version}");
+            $this->log('WARN', "\t\tNo full proof found yet for record ID #{$record->RecordID} and version {$record->Version}");
         }
     }
 
