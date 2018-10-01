@@ -16,6 +16,8 @@
     ],
     "require": {
         "php": ">=7.0",
+        "ext-msgpack": "*",
+        "ext-zlib": "*",
         "silverstripe/versioned": "^1.1",
         "phptek/jsontext": "^2.0.0",
         "dcentrica/chainpoint-receiptviz-php": "^0.1",
