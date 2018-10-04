@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="vendor/silverstripe/framework/tests/bootstrap.php" colors="true">
     <testsuite name="verifiable">
-        <directory>tests/unit</directory>
+        <directory>test/unit</directory>
     </testsuite>
 </phpunit>
