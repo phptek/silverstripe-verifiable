@@ -4,6 +4,8 @@ sudo: false
 
 language: php
 
+pecl install msgpack
+
 env:
   global:
     - COMPOSER_ROOT_VERSION=4.0.x-dev
