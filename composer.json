@@ -19,6 +19,7 @@
         "ext-msgpack": "*",
         "ext-zlib": "*",
         "silverstripe/versioned": "^1.1",
+        "silverstripe/admin": "^1.1",
         "phptek/jsontext": "^2.0.0",
         "dcentrica/chainpoint-receiptviz-php": "^0.1",
         "guzzlehttp/guzzle": "^6.3.3"

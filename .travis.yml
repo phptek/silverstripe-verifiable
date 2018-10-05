@@ -23,8 +23,15 @@ matrix:
         - DB=MYSQL
 
 before_script:
+  # Init PHP
   - pecl install msgpack
   - composer self-update || true
+  - phpenv rehash
+  - phpenv config-rm xdebug.ini
+  
+  # Composer Deps
+  - export PATH=~/.composer/vendor/bin:$PATH
+  - composer validate
   - composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
 
 script:
