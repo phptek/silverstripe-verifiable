@@ -9,7 +9,6 @@ namespace PhpTek\Verifiable\ORM\FieldType;
 
 use PhpTek\JSONText\ORM\FieldType\JSONText;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
-use Blockchain\Blockchain;
 
 /**
  * Encapsulates a single chainpoint proof as returned by the currently active Merkle
