@@ -24,7 +24,7 @@ matrix:
 
 before_script:
   # Init PHP
-  - pecl install msgpack
+  - pecl install msgpack || true
   - composer self-update || true
   - phpenv rehash
   - phpenv config-rm xdebug.ini
@@ -35,7 +35,7 @@ before_script:
   - composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
 
 script:
-  - vendor/bin/phpunit --testsuite verifiable
+  - vendor/bin/phpunit test/unit
 
 branches:
   only: 
