@@ -105,9 +105,6 @@ class MyDataObject extends DataObject
 
 Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's YML config cache.
 
-To view generated SVG Chainpoint visualisations in the admin UI, you'll need to ensure that `svg` is a legitimate file-suffix to use in SilverStripe
-by editing `public/assets/.htaccess` (Apache users only).
-
 You'll also need to install a simple cron job on your hosting environment which invokes `UpdateProofController`. This will do the job of periodically querying the backend for a full-proof (Chainpoint backend only).
 
     ./vendor/bin/sake verifiable/tools/update
