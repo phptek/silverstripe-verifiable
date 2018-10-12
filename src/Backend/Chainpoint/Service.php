@@ -10,7 +10,6 @@ namespace PhpTek\Verifiable\Backend\Chainpoint;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
-use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Backend\GatewayProvider;
 use PhpTek\Verifiable\Backend\ServiceProvider;
 use PhpTek\Verifiable\Backend\Chainpoint\Gateway;
@@ -142,7 +141,6 @@ class Service implements ServiceProvider
      *
      * @param  GatewayProvider   $provider Optional manually passed backend.
      * @return VerifiableService
-     * @throws VerifiableBackendException
      */
     public function setGateway(GatewayProvider $provider = null)
     {
@@ -164,7 +162,7 @@ class Service implements ServiceProvider
     }
 
     /**
-     * Hashes the data passed into the $hash param.
+     * Hashes the data passed as the $data param.
      *
      * @param  array  $data An array of data who's values should be hashed.
      * @return string       The resulting hashed data.
@@ -172,9 +170,9 @@ class Service implements ServiceProvider
     public function hash(array $data) : string
     {
         $func = $this->gateway->hashFunc();
-        $text = json_encode($data, true);
+        $text = serialize($data);
 
-        return hash($func, $text);
+        return hash($func, $text, false);
     }
 
 }

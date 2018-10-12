@@ -175,9 +175,9 @@ class VerifiableExtension extends DataExtension
             }
         }
 
-        // If the record is a `File` then also push some of its facets too
-        if ($record->exists() && in_array($record->ClassName, ClassInfo::subclassesFor(File::class))) {
-            array_push($verifiable, $record->getString(), $record->Name);
+        // If the record is a `File` then push its contents for hashing too
+        if (in_array($record->ClassName, ClassInfo::subclassesFor(File::class))) {
+            array_push($verifiable, $record->getString());
         }
 
         return $verifiable;
