@@ -11,13 +11,14 @@ use SilverStripe\Dev\SapphireTest;
 use PhpTek\Verifiable\Test\MyTestDataObjectNoValidate;
 use PhpTek\Verifiable\Test\MyTestDataObjectVerify;
 use PhpTek\Verifiable\Test\MyTestDataObjectSource01;
+use SilverStripe\Core\Config\Config;
 
 /**
  * Simple tests of the key methods found in our JSONText subclass `ChainpointProof`.
  */
 class VerifiableExtensionTest extends SapphireTest
 {
-    protected $usesDatabase = true;
+    protected $usesDatabase = false;
 
     // Exercise VerifiableExtension.php::sourceMode()
     public function testSourceMode()
@@ -27,18 +28,19 @@ class VerifiableExtensionTest extends SapphireTest
     }
 
     // Exercise VerifiableExtension.php::source()
-    public function testSource()
+    public function testSourceProofIsSkipped()
     {
-        // Check that the extension has been applied by virtue of its "Proof" field
+        // Check that the extension has been applied by virtue of the existance of a "Proof" field
         $test = MyTestDataObjectSource01::create();
         $this->assertArrayHasKey('Proof', $test->getSchema()->databaseFields(MyTestDataObjectSource01::class));
-        $test->setField('Proof', '["TEST"]')->write(); // Minimally valid JSON
 
-        // Check that our "TEST" value has been writeen
-        $this->assertEquals('["TEST"]', DataObject::get(MyTestDataObjectSource01::class)->first()->Proof);
+        Config::nest();
+        Config::modify()->update(MyTestDataObjectSource01::class, 'verifiable_fields', ['Proof']);
 
         // Ensure the "Proof" field-value will not become hashed
-        $this->assertNotContains('TEST', MyTestDataObjectSource01::create()->source());
+        $this->assertCount(2, MyTestDataObjectSource01::create()->source());
+
+        Config::unnest();
     }
 }
 
@@ -90,12 +92,6 @@ class MyTestDataObjectSource01 extends DataObject implements TestOnly
 {
     use Injectable;
 
-    // "Proof" _will_ be part of this object because it is decorated by VerifiableExtension itself
-    private static $db = [
-        'Foo' => 'Varchar',
-        'Bar' => 'Boolean',
-    ];
-
     private static $extensions = [
         VerifiableExtension::class,
     ];
@@ -103,5 +99,6 @@ class MyTestDataObjectSource01 extends DataObject implements TestOnly
     private static $verifiable_fields = [
         'Foo',
         'Bar',
+        'Proof',
     ];
 }
