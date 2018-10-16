@@ -68,7 +68,7 @@ class VerifiableExtension extends DataExtension
      *
      * @return int
      */
-    public function sourceMode()
+    public function getSourceMode()
     {
         if (method_exists($this->getOwner(), 'verify')) {
             return self::SOURCE_MODE_FUNC;
@@ -110,7 +110,7 @@ class VerifiableExtension extends DataExtension
         ));
 
         $this->service->setExtra();
-        $verifiable = $this->source();
+        $verifiable = $this->getSource();
         $doAnchor = (count($verifiable) && $owner->exists());
 
         // The actual hashing takes place in the currently active service's 'call()' method
@@ -147,12 +147,12 @@ class VerifiableExtension extends DataExtension
      * @param  DataObject $record
      * @return array
      */
-    public function source(DataObject $record = null) : array
+    public function getSource(DataObject $record = null) : array
     {
         $record = $record ?: $this->getOwner();
         $verifiable = [];
 
-        if ($this->sourceMode() === self::SOURCE_MODE_FUNC) {
+        if ($this->getSourceMode() === self::SOURCE_MODE_FUNC) {
             $verifiable = (array) $record->verify();
         } else {
             // If the "VerifiableFields" DB field is not empty, it contains a cached
