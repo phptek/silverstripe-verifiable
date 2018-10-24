@@ -158,7 +158,8 @@ class VerifiableAdminController extends Controller
                 'CreatedDate' => self::display_date($record->Created),
                 'Version' => "$record->Version",
                 'Class' => get_class($record),
-                'VerifiableFields' => $record->sourceMode() === VerifiableExtension::SOURCE_MODE_FIELD ?
+                // TODO code smell
+                'VerifiableFields' => $record->getSourceMode() === VerifiableExtension::SOURCE_MODE_FIELD ?
                     json_decode($record->VerifiableFields) :
                     [],
             ],
