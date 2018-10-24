@@ -68,13 +68,28 @@ class VerifiableExtension extends DataExtension
      *
      * @return int
      */
-    public function getSourceMode()
+    public function getSourceMode() : int
     {
         if (method_exists($this->getOwner(), 'verify')) {
             return self::SOURCE_MODE_FUNC;
         }
 
         return self::SOURCE_MODE_FIELD;
+    }
+
+    /**
+     * Depending on the return value of getSourceMod(), returns the currently
+     * decorated object's verifiable fields.
+     *
+     * @return array
+     */
+    public function verifiableFields() : array
+    {
+        $owner = $this->getOwner();
+
+        return $owner->getSourceMode() === self::SOURCE_MODE_FIELD ?
+                    json_decode($owner->VerifiableFields) :
+                    [];
     }
 
     /**
