@@ -26,18 +26,6 @@ The two systems that we are aware of that fit the bill as servicable Merkle back
 
 Developers are also free and able to integrate with different backends using the module's pluggable API. See the "Extending" section below.
 
-## Extending
-
-The true power of this module is twofold:
-
- 1. Give developers the ability to supply their own data to be hashed and submitted. 
-
-All developers need to do is declare a `verify()` method on any decorated and [versioned](https://github.com/silverstripe/silverstripe-versioned) `DataObject` subclass, and the module will call it on every write. Uses of this method might be to notarise uploaded `File` objects or use SilverStripe to become the next [NewsDiffs](https://newsdiffs.org/). See the configuration section below.
-
- 2. To use an alternative to Chainpoint, the module's pluggable API allows developers to use a different Merkle backend. 
-
-See the `GatewayProvider` and `ServiceProvider` interfaces in the "src/Backend", as well as "BackendServiceFactory" to see how backends are instantiated.
-
 ![alt text](doc/img/screenshot-asset-admin-ss4.2.png "Screenshot from SilverStripe 4.2 asset admin")
 
 ![alt text](doc/img/screenshot-page-admin-ss4.2.png "Screenshot from SilverStripe 4.2 page admin")
@@ -119,6 +107,18 @@ Be sure to run `flush=all` via your browser or the CLI to refresh SilverStripe's
 You'll also need to install a simple cron job on your hosting environment which invokes `UpdateProofController`. This will do the job of periodically querying the backend for a full-proof (Chainpoint backend only).
 
     ./vendor/bin/sake verifiable/tools/update
+
+## Extending
+
+The true power of this module for developers is twofold:
+
+ 1. Give developers the ability to supply their own data to be hashed and submitted. 
+
+All developers need to do is declare a `verify()` method on any decorated and [versioned](https://github.com/silverstripe/silverstripe-versioned) `DataObject` subclass, and the module will call it on every write. Uses of this method might be to notarise uploaded `File` objects or use SilverStripe to become the next [NewsDiffs](https://newsdiffs.org/). See the configuration section below.
+
+ 2. To use an alternative to Chainpoint, the module's pluggable API allows developers to use a different Merkle backend. 
+
+See the `GatewayProvider` and `ServiceProvider` interfaces in the "src/Backend" directory, as well as `BackendServiceFactory` to see how backends are instantiated.
 
 ## Known Issues and Caveats
 
