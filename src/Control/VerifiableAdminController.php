@@ -267,7 +267,7 @@ class VerifiableAdminController extends Controller
             // OK, so we have an intact local full proof, let's ensure it still
             // matches a hash of the data it purports to represent
             $remoteHash = $responseModel->getHash();
-            $reCalculated = $this->service->hash($record->source());
+            $reCalculated = $this->service->hash($record->getSource());
 
             if ($reCalculated !== $remoteHash) {
                 return self::STATUS_LOCAL_HASH_INVALID;
