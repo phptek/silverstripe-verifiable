@@ -6,25 +6,37 @@
 
 ## What is this?
 
-A configurable content verification module for SilverStripe applications. It provides independent data-integrity verification features to content authors and developers. Data can be verified independently of SilverStripe and at any time.
+A configurable data and content verification module for SilverStripe applications. It provides independent data-integrity verification features to content authors and developers. Data can be verified independently of SilverStripe and its database, at any time.
 
 ## Background
 
-For decades users of software have taken it for granted that their stored data is safe from tampering. That developers, vendors and database administrators are above making unauthorised manual or automated content modifications, regardless of any mal-intent. Simply put: Users have put their faith into these entities for no real reason other than they probably sounded like they knew what they were doing.
+For decades users of software have taken it for granted that their data is safe from tampering. That developers, vendors and database administrators would never make unauthorised data modifications, regardless of any mal-intent. Simply put: Users have put their faith into these entities for no reason other than they probably sounded like they knew what they were doing.
 
-Because no I.T. system can claim immutability, this module therefore offers verifiability; data who's integrity is mathematically provable at any point in time. If some data were to change when it wasn’t supposed to, then those that need to know, can.
+No centralised I.T. can claim immutability. This module therefore offers verifiability; data who's integrity is mathematically provable at any point in time. If some data were to change when it shouldn't have, then those that need to know, can.
 
-The identification of unwarranted behaviour and negative outcomes is not the only application of verifiability. Verifiability is a research domain of its own closely aligned with those of the decentralisation movement typified by cryptocurrencies and enterprise blockchain networks. Verifiability is also concerned with transparency in the context of public data, and accountability.
+The identification of unwarranted behaviour and negative outcomes is not the only application of verifiability. Verifiability is a research domain of its own, that is closely aligned with those of the decentralisation movement typified by cryptocurrencies and permissionless blockchain networks. Verifiability is also concerned with transparency and accountability in the context of public data and this module hopes to help with this.
 
-By default, without any specialist configuration; the module offers a simple admin interface that allows the content of a specific version of any [versioned](https://github.com/silverstripe/silverstripe-versioned) `DataObject`, to be verified as not having changed since it was published.
+Without any configuration; the module's defaults offer a simple administrative interface that allows the content of a specific version of any [versioned](https://github.com/silverstripe/silverstripe-versioned) `DataObject`, to be verified as not having changed since it was published.
 
 ## How does it work?
 
-With the most basic configuration; on each write-operation, a sha256 hash of selected field-data is created and submitted to a 3rd party backend that implements a [Merkle or Binary Hash Tree](https://en.wikipedia.org/wiki/Merkle_tree). The true power of this module however comes with giving developers the ability to supply their own data to be hashed and submitted. All developers need to do is declare a `verify()` method on any decorated and [versioned](https://github.com/silverstripe/silverstripe-versioned) `DataObject` subclass, and the module will call it on every write. Uses of this method might be to notarise uploaded `File` objects or use SilverStripe to become the next [NewsDiffs](https://newsdiffs.org/). See the configuration section below. 
+With the most basic configuration; on each write-operation, a sha256 hash of selected field-data is created and submitted to a separate backend system that implements a [Merkle or Binary Hash Tree](https://en.wikipedia.org/wiki/Merkle_tree). This backend is either a local or a remote immutable, semi-immutable or proxy data-store.
 
-The two systems that we are aware of that fit the bill as servicable Merkle backends are; public blockchains (notably Bitcoin and Ethereum) and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/).
+The two systems that we are aware of that fit the bill as servicable Merkle backends of this kind are; public blockchains (notably Bitcoin and Ethereum) and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/). The default is to use the [Chainpoint](https://chainpoint.org) service as a proxy data-store. In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing arbitrary data of a limited size. This makes them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. The module's default Chainpoint adaptor makes use of REST calls to the [Chainpoint](https://chainpoint.org/) Network. Chainpoint periodically writes Merkle Root hashes to the Bitcoin blockchain.
 
-In addition to processing and persisting value-based transactions in their native cryptocurrencies, the Bitcoin and Ethereum blockchains are also capable of storing arbitrary data of a limited size. This makes them ideal for storing Merkle Root hashes from which individual "leaf" hashes can be mathematically derived. The module makes use of REST calls to the [Chainpoint](https://chainpoint.org/) Network. Chainpoint periodically writes Merkle Root hashes to the Bitcoin blockchain.
+Developers are also free and able to integrate with different backends using the module's pluggable API. See the "Extending" section below.
+
+## Extending
+
+The true power of this module is twofold:
+
+ 1. Give developers the ability to supply their own data to be hashed and submitted. 
+
+All developers need to do is declare a `verify()` method on any decorated and [versioned](https://github.com/silverstripe/silverstripe-versioned) `DataObject` subclass, and the module will call it on every write. Uses of this method might be to notarise uploaded `File` objects or use SilverStripe to become the next [NewsDiffs](https://newsdiffs.org/). See the configuration section below.
+
+ 2. To use an alternative to Chainpoint, the module's pluggable API allows developers to use a different Merkle backend. 
+
+See the `GatewayProvider` and `ServiceProvider` interfaces in the "src/Backend", as well as "BackendServiceFactory" to see how backends are instantiated.
 
 ![alt text](doc/img/screenshot-asset-admin-ss4.2.png "Screenshot from SilverStripe 4.2 asset admin")
 
@@ -33,7 +45,7 @@ In addition to processing and persisting value-based transactions in their nativ
 ## Requirements
 
 * At least PHP7 and SilverStripe 4.
-* Your PHP setup also needs Zlib and [msgpack](https://msgpack.org/). These are required to decode the binary format proof returned from most Tierion REST API calls, into a valid JSON-LD v3 Chainpoint Proof.
+* Your PHP setup also needs Zlib and [msgpack](https://msgpack.org/). These are required to decode the binary format proof returned from most Chainpoint REST API calls, into a valid JSON-LD v3 Chainpoint Proof.
 
 ## Install
 
@@ -45,7 +57,6 @@ Configure the desired backend:
 
 ```YML
 PhpTek\Verifiable\Backend\VerifiableServiceFactory
-  # One of: "trillian" or "chainpoint"
   backend: chainpoint
 ```
 
