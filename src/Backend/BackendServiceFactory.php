@@ -22,6 +22,8 @@ class BackendServiceFactory implements Factory
     use Configurable;
 
     /**
+     * @param  string $service
+     * @param  array $params
      * @return ServiceProvider
      * @throws VerifiableBackendException
      */

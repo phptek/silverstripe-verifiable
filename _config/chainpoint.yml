@@ -16,3 +16,7 @@ PhpTek\Verifiable\Backend\Chainpoint\Gateway:
   # Note: The higher this is, the more HTTP requests need to be made to the
   # Chainpoint network when saving/publishing content.
   discover_node_count: 3
+  
+PhpTek\Verifiable\Backend\BackendServiceFactory:
+  # One of: "trillian" or "chainpoint"
+  backend: chainpoint

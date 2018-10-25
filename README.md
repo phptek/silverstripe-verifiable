@@ -41,11 +41,15 @@ Developers are also free and able to integrate with different backends using the
 
 ## Configuration
 
-Configure the desired backend:
+Configure the desired backend (Module default is to use `chainpoint`)
 
 ```YML
-PhpTek\Verifiable\Backend\VerifiableServiceFactory
-  backend: chainpoint
+---
+Name: mysite-verifiable-chainpoint-backend-config
+After: '#verifiable-chainpoint-backend-config'
+---
+PhpTek\Verifiable\Backend\VerifiableServiceFactory:
+  backend: mybackend
 ```
 
 Add the `VerifiableExtension` to each data-model that you'd like to be "Verifiable":
@@ -118,7 +122,7 @@ All developers need to do is declare a `verify()` method on any decorated and [v
 
  2. To use an alternative to Chainpoint, the module's pluggable API allows developers to use a different Merkle backend. 
 
-See the `GatewayProvider` and `ServiceProvider` interfaces in the "src/Backend" directory, as well as `BackendServiceFactory` to see how backends are instantiated.
+See the `GatewayProvider` and `ServiceProvider` interfaces in the "src/Backend" directory, as well as `BackendServiceFactory` to see how backends are instantiated. Once you've developed your backend, refer to the "Configuration" section above, for how to override the module's default "Chainpoint" backend.
 
 ## Known Issues and Caveats
 

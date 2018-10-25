@@ -16,7 +16,7 @@ use SilverStripe\Core\Config\Config;
 /**
  * Simple tests of the key methods found in our JSONText subclass `ChainpointProof`.
  */
-class VerifiableExtensionTest extends SapphireTest
+class VerifiableTest extends SapphireTest
 {
     protected $usesDatabase = true;
 
