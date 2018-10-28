@@ -15,6 +15,7 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\HiddenField;
 use PhpTek\JSONText\ORM\FieldType\JSONText;
+use PhpTek\Verifiable\Util\Util;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\DataObject;
@@ -78,17 +79,18 @@ class VerifiableExtension extends DataExtension
     }
 
     /**
-     * Depending on the return value of getSourceMod(), returns the currently
-     * decorated object's verifiable fields.
+     * Depending on the return value of getSourceMode(), returns the decorated
+     * object's verifiable fields.
      *
      * @return array
      */
     public function verifiableFields() : array
     {
         $owner = $this->getOwner();
+        $fields = $owner->VerifiableFields ?: '[]';
 
         return $owner->getSourceMode() === self::SOURCE_MODE_FIELD ?
-                    json_decode($owner->VerifiableFields) :
+                    json_decode($fields) :
                     [];
     }
 
@@ -104,6 +106,10 @@ class VerifiableExtension extends DataExtension
      */
     public function onAfterPublish()
     {
+        if (Util::is_running_test()) {
+            return;
+        }
+
         $owner = $this->getOwner();
         $latest = Versioned::get_latest_version(get_class($owner), $owner->ID);
         $table = sprintf('%s_Versions', $latest->baseTable());

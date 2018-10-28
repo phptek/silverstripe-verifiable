@@ -1,0 +1,13 @@
+MyTestDataObjectSource02:
+  null-fields:
+    VerifiableFields: NULL
+  no-fields:
+    VerifiableFields: ''
+  a-field:
+    VerifiableFields: '["TEST1"]'
+  some-fields:
+    VerifiableFields: '["TEST1","TEST2"]'
+  markup-in-fields:
+    TEST1: 'Foo'
+      
+  
