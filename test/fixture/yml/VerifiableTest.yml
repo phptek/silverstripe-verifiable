@@ -1,4 +1,4 @@
-MyTestDataObjectSource02:
+PhpTek\Verifiable\Test\MyTestDataObject:
   null-fields:
     VerifiableFields: NULL
   no-fields:
