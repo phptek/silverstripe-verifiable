@@ -8,10 +8,10 @@
 namespace PhpTek\Verifiable\Test;
 
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Core\Config\Config;
 use PhpTek\Verifiable\Test\MyTestDataObjectNoVerify;
 use PhpTek\Verifiable\Test\MyTestDataObjectVerify;
 use PhpTek\Verifiable\Test\MyTestDataObjectSource01;
-use SilverStripe\Core\Config\Config;
 
 /**
  * Simple tests of the key methods found in our JSONText subclass `ChainpointProof`.

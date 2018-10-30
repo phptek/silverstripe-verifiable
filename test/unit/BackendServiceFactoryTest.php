@@ -8,10 +8,10 @@
 namespace PhpTek\Verifiable\Test;
 
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Core\Config\Config;
 use PhpTek\Verifiable\Backend\BackendServiceFactory;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Backend\ServiceProvider;
-use SilverStripe\Core\Config\Config;
 
 /**
  * Simple tests for our public factory API.

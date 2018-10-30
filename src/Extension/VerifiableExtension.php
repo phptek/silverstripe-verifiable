@@ -8,19 +8,19 @@
 namespace PhpTek\Verifiable\Extension;
 
 use SilverStripe\ORM\DataExtension;
-use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\HiddenField;
-use PhpTek\JSONText\ORM\FieldType\JSONText;
-use PhpTek\Verifiable\Util\Util;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Assets\File;
+use PhpTek\JSONText\ORM\FieldType\JSONText;
+use PhpTek\Verifiable\Util\Util;
+use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
 
 /**
  * By attaching this extension to any {@link DataObject} subclass, it will therefore

@@ -7,12 +7,12 @@
 
 namespace PhpTek\Verifiable\Backend\Chainpoint;
 
-use PhpTek\Verifiable\Backend\GatewayProvider;
+use SilverStripe\Core\Config\Configurable;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use SilverStripe\Core\Config\Configurable;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Exception\VerifiableValidationException;
+use PhpTek\Verifiable\Backend\GatewayProvider;
 
 /**
  * Calls the endpoints of the Tierion network's ChainPoint service.

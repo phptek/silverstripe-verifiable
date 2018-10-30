@@ -15,10 +15,10 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Control\Director;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Security\Permission;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 use PhpTek\Verifiable\Extension\VerifiableExtension;
 use PhpTek\Verifiable\Exception\VerifiableValidationException;
-use SilverStripe\Security\Permission;
 
 /**
  * Controller available to CLI or XHR requests for updating all or selected versionable

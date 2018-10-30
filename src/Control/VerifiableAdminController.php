@@ -13,9 +13,8 @@ use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Security;
 use SilverStripe\Security\Permission;
-use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
-use PhpTek\Verifiable\Extension\VerifiableExtension;
 use Dcentrica\Viz\ChainpointViz;
+use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
 
 /**
  * Accepts incoming requests for data verification e.g. from within the CMS
