@@ -9,6 +9,7 @@ namespace PhpTek\Verifiable\ORM\FieldType;
 
 use PhpTek\JSONText\ORM\FieldType\JSONText;
 use PhpTek\Verifiable\Exception\VerifiableBackendException;
+use PhpTek\Verifiable\Util\Util;
 
 /**
  * Encapsulates a single chainpoint proof as returned by the currently active Merkle
@@ -23,16 +24,22 @@ class ChainpointProof extends JSONText
 {
 
     /**
+     * Chainpoint specific model format
+     *
      * @var int
      */
     const MODEL_TYPE_PHR = 1; // PostHashResponse
 
     /**
+     * Chainpoint specific model format
+     *
      * @var int
      */
     const MODEL_TYPE_GPR = 2; // GetProofsResponse
 
     /**
+     * Chainpoint specific model format
+     *
      * @var int
      */
     const MODEL_TYPE_PVR = 3; // PostVerifyResponse
@@ -48,7 +55,7 @@ class ChainpointProof extends JSONText
         $this->setReturnType('array');
 
         if (!empty($value = $this->query('$..hash_id_node'))) {
-            return $value;
+            return !empty($value[0]) ? $value : [];
         }
 
         return [];
@@ -195,13 +202,20 @@ class ChainpointProof extends JSONText
      */
     public function getMerkleRoot(string $type = 'cal') : string
     {
-        if ($anchor = $this->getAnchors($type)) {
-            if (!empty($anchor[0]['uris'][0])) {
-                return file_get_contents($anchor[0]['uris'][0]);
-            }
+        if (!$anchor = $this->getAnchors($type)) {
+            throw new VerifiableBackendException('No Merkle Root found!');
         }
 
-        throw new VerifiableBackendException('No Merkle Root found!');
+        if (!empty($anchor[0]['uris'][0])) {
+            // TODO Smell
+            if (Util::is_running_test()) {
+                return '';
+            } else if (ini_get('allow_url_fopen') !== "1" || !$root = file_get_contents($anchor[0]['uris'][0])) {
+                throw new VerifiableBackendException('Unable to read remote file.');
+            }
+
+            return $root;
+        }
     }
 
     /**

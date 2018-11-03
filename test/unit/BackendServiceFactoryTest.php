@@ -5,8 +5,6 @@
  * @package silverstripe-verifiable
  */
 
-namespace PhpTek\Verifiable\Test;
-
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Core\Config\Config;
 use PhpTek\Verifiable\Backend\BackendServiceFactory;
@@ -14,7 +12,10 @@ use PhpTek\Verifiable\Exception\VerifiableBackendException;
 use PhpTek\Verifiable\Backend\ServiceProvider;
 
 /**
- * Simple tests for our public factory API.
+ * Suite: BackendServiceFactoryTest
+ *
+ * Deals with mocking testing key logic from the module's service/gateway factory
+ * found in {@link BackendServiceFactory}.
  */
 class BackendServiceFactoryTest extends SapphireTest
 {

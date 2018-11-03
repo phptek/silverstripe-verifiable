@@ -19,7 +19,6 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Assets\File;
 use PhpTek\JSONText\ORM\FieldType\JSONText;
-use PhpTek\Verifiable\Util\Util;
 use PhpTek\Verifiable\ORM\Fieldtype\ChainpointProof;
 
 /**
@@ -106,10 +105,6 @@ class VerifiableExtension extends DataExtension
      */
     public function onAfterPublish()
     {
-        if (Util::is_running_test()) {
-            return;
-        }
-
         $owner = $this->getOwner();
         $latest = Versioned::get_latest_version(get_class($owner), $owner->ID);
         $table = sprintf('%s_Versions', $latest->baseTable());

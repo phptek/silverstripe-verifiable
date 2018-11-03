@@ -1,0 +1,21 @@
+[{
+	"proof_index":0,
+	"hash":"9344d44ee69cae8111dba30eb08b1dc82e6b83f4391c8667bd9237405dc84aac",
+	"hash_id_node":"040d1700-db30-11e8-964e-0129bb454b80",
+	"hash_submitted_node_at":"2018-10-29T04:06:30Z",
+	"hash_id_core":"0709b530-db30-11e8-a51f-01bcbca5d2a2",
+	"hash_submitted_core_at":"2018-10-29T04:06:35Z",
+	"anchors":[
+		{
+			"branch":"cal_anchor_branch",
+			"type":"cal",
+			"valid":true
+		},
+		{
+			"branch":"btc_anchor_branch",
+			"type":"btc",
+			"valid":true
+		}
+	],
+	"status":"verified"
+}]

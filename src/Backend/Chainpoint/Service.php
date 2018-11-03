@@ -17,6 +17,9 @@ use PhpTek\Verifiable\Backend\Chainpoint\Gateway;
 /**
  * Service class that works as an intermediary between any data model and the
  * currently selected Merkle Tree backend gateway.
+ *
+ * @todo There should be only one service. The gateway is the part that changes
+ *       between backend implementations.
  */
 class Service implements ServiceProvider
 {
@@ -109,7 +112,7 @@ class Service implements ServiceProvider
 
     /**
      * Set some arbitrary data onto the service. Used as a way of acting as
-     * an intermediary or broker between DataOBjects and the backend.
+     * an intermediary or broker between DataObjects and the backend.
      *
      * @param  array $extra
      * @return VerifiableService

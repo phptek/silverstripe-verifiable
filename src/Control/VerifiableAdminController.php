@@ -113,9 +113,9 @@ class VerifiableAdminController extends Controller
      * by echoing a JSON response for consumption by client-side logic.
      *
      * @param  HTTPRequest $request
-     * @return void
+     * @return string
      */
-    public function verifyhash(HTTPRequest $request)
+    public function verifyhash(HTTPRequest $request) : string
     {
         if (!Permission::checkMember(Security::getCurrentUser(), 'ADMIN')) {
             return $this->httpError(401, 'Unauthorised');
@@ -180,6 +180,8 @@ class VerifiableAdminController extends Controller
         ], JSON_UNESCAPED_SLASHES);
 
         $this->renderJSON($response);
+
+        return $response;
     }
 
     /**
@@ -212,9 +214,9 @@ class VerifiableAdminController extends Controller
     }
 
     /**
-     * Gives us the current verification status of the given record. Takes into
-     * account the state of the saved proof as well as by making a backend
-     * verification call.
+     * Centerpiece of verification controller requests. Gives us the current
+     * verification status of the given record. Takes into account the state of
+     * the saved proof as well as by making a backend verification call.
      *
      * @param  DataObject $record           The versioned record we're checking.
      * @param  array      $nodes            Array of cached chainpoint node IPs.
@@ -246,7 +248,9 @@ class VerifiableAdminController extends Controller
         if ($proof->isFull()) {
             // Tests 3 of the key components of the local proof. Sending a verification
             // request will do this and much more for us, but rudimentary local checks
-            // can prevent a network request
+            // may prevent unnecessary network requests
+            // TODO Integrate or port github.com/chainpoint/chainpoint-node-validator
+            // and replace these local checks
             if (!$proof->getHashIdNode() || !$proof->getProof() || !count($proof->getAnchorsComplete())) {
                 return self::STATUS_LOCAL_COMPONENT_INVALID;
             }
