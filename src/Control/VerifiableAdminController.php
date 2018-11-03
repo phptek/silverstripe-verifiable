@@ -274,7 +274,9 @@ class VerifiableAdminController extends Controller
                 return self::STATUS_LOCAL_HASH_INVALID;
             }
 
-            $chainpointViz = new ChainpointViz($proof->getProofJson(), 'btc');
+            $chainpointViz = $this->visualiser
+                    ->setReceipt($proof->getProofJson())
+                    ->setChain('btc');
 
             // Setup data for display & manual re-verification
             $v3proof = ChainpointProof::create()->setValue($proof->getProofJson());
@@ -284,12 +286,12 @@ class VerifiableAdminController extends Controller
             $verificationData['UUID'] = $v3proof->getHashIdNode();
             $verificationData['TXID'] = $chainpointViz->getBtcTXID();
             $verificationData['OPRET'] = $chainpointViz->getBtcOpReturn();
+            $verificationData['ChainpointViz'] = $this->getProofViz($chainpointViz);
             $verificationData['SubmittedAt'] = $v3proof->getSubmittedAt();
             $verificationData['Hashes'] = [
                 'local' => $reCalculated,
                 'remote' => $v3proof->getHash(),
             ];
-            $verificationData['ChainpointViz'] = $this->getProofViz($chainpointViz);
 
             // All is well. As you were...
             return self::STATUS_VERIFIED_OK;
@@ -336,7 +338,7 @@ class VerifiableAdminController extends Controller
         $fileHref = sprintf('/%s/%s', ASSETS_DIR, $fileName);
 
         $viz->setFilename($filePath);
-        $viz->visualize();
+        $viz->visualise();
 
         if (!file_exists($filePath)) {
             return '';

@@ -37,7 +37,10 @@ Developers are also free and able to integrate with different backends using the
 ## Requirements
 
 * At least PHP7 and SilverStripe 4.
-* Your PHP setup also needs Zlib and [msgpack](https://msgpack.org/). These are required to decode the binary format proof returned from most Chainpoint REST API calls, into a valid JSON-LD v3 Chainpoint Proof.
+* Your PHP setup will need:
+ * Zlib
+ * [msgpack](https://msgpack.org/) - both are required to decode the binary format proof returned from Chainpoint REST API calls.
+ * [allow_url_fopen](http://nz2.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen) enabled in php.ini.
 
 ## Install
 
