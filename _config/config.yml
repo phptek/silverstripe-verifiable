@@ -5,8 +5,6 @@ Name: verifiable-config
 SilverStripe\Core\Injector\Injector:
   BackendService:
     factory: PhpTek\Verifiable\Backend\BackendServiceFactory
-  VizService:
-    factory: PhpTek\Verifiable\Viz\HashVizFactory
 
 PhpTek\Verifiable\Extension\VerifiableExtension:
   dependencies:
@@ -15,7 +13,7 @@ PhpTek\Verifiable\Extension\VerifiableExtension:
 PhpTek\Verifiable\Control\VerifiableAdminController:
   dependencies:
     service: '%$BackendService'
-    visualiser: '%$VizService'
+    visualiser: '%$Dcentrica\Viz\ChainpointViz'
     
 PhpTek\Verifiable\Control\UpdateProofController:
   dependencies:

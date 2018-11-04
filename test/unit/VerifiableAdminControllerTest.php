@@ -6,6 +6,8 @@
  */
 
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Core\Config\Config;
+use Dcentrica\Viz\ChainpointViz;
 use PhpTek\Verifiable\Control\VerifiableAdminController;
 use PhpTek\Verifiable\Backend\Chainpoint\Service;
 use PhpTek\Verifiable\Extension\VerifiableExtension;
@@ -28,9 +30,9 @@ class VerifiableAdminControllerTest extends SapphireTest
     protected static $fixture_file = __DIR__ . '/../fixture/yml/VerifiableAdminControllerTest.yml';
 
     /**
-     * Exercises the VerifiableAdminController::getStatus() method.
+     * Exercises the VerifiableAdminController::getStatus() method for failed statuses.
      */
-    public function testGetStatus()
+    public function testGetStatusFailures()
     {
         $serviceStub = $this->createMock(Service::class);
         // Stub-in a canned verification response
@@ -41,8 +43,14 @@ class VerifiableAdminControllerTest extends SapphireTest
             ->method('call')
             ->willReturn(file_get_contents(__DIR__ . '/../fixture/json/response-verified.json'));
 
+        $vizServiceStub = $this->createMock(ChainpointViz::class);
+        $vizServiceStub
+            ->method('which')
+            ->willReturn(true);
+
         $controller = VerifiableAdminController::create();
         $controller->service = $serviceStub;
+        $controller->visualiser = $vizServiceStub;
         $data = [];
 
         // No proof
@@ -68,13 +76,16 @@ class VerifiableAdminControllerTest extends SapphireTest
         // Broken full proof: (Hash mismatch - used completelty different stubbed repsonse for the fixture data)
         $record = $this->objFromFixture(MyTestDataObject::class, 'has-full-intact-proof');
         $this->assertEquals('Local Hash Invalid', $controller->getStatus($record, [], $data));
+    }
 
+    /**
+     * Exercises the VerifiableAdminController::getStatus() method for success statuses.
+     */
+    public function testGetStatusSuccesses()
+    {
         // Stub-in a suitable, matching and canned verification response used for
         // both $controller SUT and $record fixture
         $serviceStub = $this->createMock(Service::class);
-        $serviceStub
-            ->method('setExtra')
-            ->willReturn(null);
         $serviceStub
             ->method('call')
             ->willReturn(file_get_contents(__DIR__ . '/../fixture/json/response-verified-matching.json'));
@@ -85,8 +96,13 @@ class VerifiableAdminControllerTest extends SapphireTest
         $serviceStub
             ->method('hash')
             ->willReturn('9344d44ee69cae8111dba30eb08b1dc82e6b83f4391c8667bd9237405dc84aac');
+        $vizService = $this->createMock(ChainpointViz::class);
+        $vizService
+            ->method('which')
+            ->willReturn(true);
 
         $controller = VerifiableAdminController::create();
+        $controller->visualiser = $vizService;
         $controller->service = $serviceStub;
 
         // Intact proof

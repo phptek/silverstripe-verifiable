@@ -274,9 +274,11 @@ class VerifiableAdminController extends Controller
                 return self::STATUS_LOCAL_HASH_INVALID;
             }
 
+            // Tight coupling with ChainpointViz and our
+            // reliance on getBtc*() for the proper function of this controller
             $chainpointViz = $this->visualiser
-                    ->setReceipt($proof->getProofJson())
-                    ->setChain('btc');
+                ->setReceipt($proof->getProofJson())
+                ->setChain('btc');
 
             // Setup data for display & manual re-verification
             $v3proof = ChainpointProof::create()->setValue($proof->getProofJson());
@@ -345,6 +347,19 @@ class VerifiableAdminController extends Controller
         }
 
         return $fileHref;
+    }
+
+    /**
+     * Simple setter.
+     *
+     * @param  ChainpointViz $visualiser
+     * @return VerifiableAdminController
+     */
+    public function setVisualiser($visualiser) : VerifiableAdminController
+    {
+        $this->visualiser = $visualiser;
+
+        return $this;
     }
 
 }

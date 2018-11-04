@@ -1,5 +1,3 @@
-# See https://github.com/silverstripe-labs/silverstripe-travis-support for setup details
-
 sudo: false
 
 language: php
@@ -26,7 +24,6 @@ before_script:
   # Init PHP
   - pecl install msgpack || true
   - composer self-update || true
-  - apt-get install graphviz
   - phpenv rehash
   - phpenv config-rm xdebug.ini
   
