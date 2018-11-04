@@ -15,6 +15,8 @@ use SilverStripe\Security\Security;
 use SilverStripe\Security\Permission;
 use Dcentrica\Viz\ChainpointViz;
 use PhpTek\Verifiable\ORM\FieldType\ChainpointProof;
+use PhpTek\Verifiable\Security\Security as VSec;
+use PhpTek\Verifiable\Exception\VerifiableNoVersionException;
 
 /**
  * Accepts incoming requests for data verification e.g. from within the CMS
@@ -105,6 +107,21 @@ class VerifiableAdminController extends Controller
     private static $allowed_actions = [
         'verifyhash',
     ];
+
+    /**
+     * @var string
+     */
+    protected $checksum;
+
+    /**
+     * @return void
+     */
+    public function init()
+    {
+        parent::init();
+
+        $this->checksum = singleton(VSec::class)->checksumVerify();
+    }
 
     /**
      * Verify the integrity of arbitrary data by means of a single hash.
