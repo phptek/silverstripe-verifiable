@@ -31,7 +31,7 @@ function do_release ()
 
   # Git commit
   echo -e "* Create release..."
-  git add . && git commit -an -m "Release: $tag"
+  git add . && git commit -an -m "Release: $tag" && git tag $tag
 
   echo -e "* Done!"
 }
