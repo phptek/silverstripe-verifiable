@@ -46,6 +46,13 @@ Developers are also free and able to integrate with different backends using the
 
     #> composer require phptek/verifiable
 
+### Verify the package
+
+The package comes with a `CHECKSUM` file which can be used to verify that the package contents have not altered since they were pushed to GitHub. Simply change into the "verifiable" directory, run the following command and compare its output with the `CHECKSUM` file. If for any reason, the `CHECKSUM` file is missing, you can still compare with the file for the equivalent build on GitHub itself:
+
+```
+#> diff CHECKSUM <( ./tools/checksum.sh true )
+```
 ## Configuration
 
 Configure the desired backend (Module default is to use `chainpoint`)
