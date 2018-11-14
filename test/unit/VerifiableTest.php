@@ -11,6 +11,8 @@ use PhpTek\Verifiable\Test\MyTestDataObject;
 use PhpTek\Verifiable\Test\MyTestDataObjectSource01;
 use PhpTek\Verifiable\Test\MyTestDataObjectVerify;
 use PhpTek\Verifiable\Test\MyTestDataObjectNoVerify;
+use PhpTek\Verifiable\Test\MyTestDataObjectVerifiyWithBodyNull;
+use PhpTek\Verifiable\Test\MyTestDataObjectVerifiyWithBodyString;
 use PhpTek\Verifiable\Backend\Chainpoint\Service;
 use PhpTek\Verifiable\Extension\VerifiableExtension;
 
@@ -77,6 +79,14 @@ class VerifiableTest extends SapphireTest
         $this->assertEquals('<p class="foo">Am I within markup?</p>', $record->getField('Content'));
         // Assert that markup is NOT present in the source bound for hashing
         $this->assertEquals('Am I within markup?', $record->getSource()[1]); // 0 => Title, 1 = >Content
+
+        // Mock a class with a verify() method that returns an empty array
+        $record = MyTestDataObjectVerifiyWithBodyNull::create();
+        $this->assertCount(0, $record->getSource());
+
+        // Mock a class with a verify() method that returns a simple string
+        $record = MyTestDataObjectVerifiyWithBodyString::create();
+        $this->assertCount(1, $record->getSource());
     }
 
     // Exercises verifiableFields()
