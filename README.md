@@ -6,11 +6,13 @@
 
 ## What is this?
 
-A configurable data and content verification module for SilverStripe applications. It provides independent data-integrity verification features to content authors and developers. Data can be verified independently of SilverStripe and its database, and at any time.
+SilverStripe content authors are able to verify whether or not their content has been tampered with.
+
+It is a configurable data and content verification module for SilverStripe applications. It provides independent and data-integrity verification to content authors and developers. Data can be verified independently of SilverStripe and its database, and at any time. The module can also be extended by means of a powerful API.
 
 ## Background
 
-For decades users of software have taken it for granted that their data is safe from tampering. That developers, vendors and database administrators will not make unauthorised modifications to data or coce, regardless of any mal-intent. Simply put: Users have put their faith into these entities for no reason other than they probably sounded like they knew what they were doing.
+For decades users of software have taken it for granted that their data is safe from tampering. That developers, vendors and database administrators will not make unauthorised modifications to data or code, regardless of any mal-intent. Simply put: Users have put their faith into these entities for no reason other than they probably sounded like they knew what they were doing.
 
 No centralised I.T. can claim immutability. This module therefore offers verifiability; data who's integrity is mathematically provable at any point in time. If data changes when it shouldn't have, then those that need to know, can.
 
@@ -20,7 +22,7 @@ Without any configuration; the module's defaults offer a simple administrative i
 
 ## How does it work?
 
-With the most basic configuration; on each write-operation, a sha256 hash of selected field-data is created and submitted to a separate backend system that implements a [Merkle or Binary Hash Tree](https://en.wikipedia.org/wiki/Merkle_tree). This backend can be a local or remote immutable or semi-immutable data store, or a proxy data-store to either.
+With the most basic configuration; on each database write-operation, a sha256 hash of selected field-data is created and submitted to a separate backend system that implements a [Merkle or Binary Hash Tree](https://en.wikipedia.org/wiki/Merkle_tree). This backend can be a local or remote immutable or semi-immutable data store, or a proxy data-store to either.
 
 The two systems that we are aware of that fit the bill as serviceable Merkle backends of this kind are; public blockchains (notably Bitcoin and Ethereum) and standalone or clustered Merkle Tree storage systems like [Trillian](https://github.com/google/trillian/). 
 
@@ -36,10 +38,10 @@ Developers are also free and able to integrate with different backends using the
 
 ## Requirements
 
-* At least PHP7 and SilverStripe 4.
-* Your PHP setup will need:
- * Zlib
- * [msgpack](https://msgpack.org/) - both are required to decode the binary format proof returned from Chainpoint REST API calls.
+ * At least PHP7 and SilverStripe 4.
+ * PHP setup with the following to decode binary format proofs returned from Chainpoint REST API calls
+   * [Zlib](https://secure.php.net/manual/en/book.zlib.php)
+   * [msgpack](https://msgpack.org/)
  * [allow_url_fopen](http://nz2.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen) enabled in php.ini.
 
 ## Install
@@ -55,7 +57,7 @@ The package comes with a `CHECKSUM` file which can be used to verify that the pa
 ```
 ## Configuration
 
-Configure the desired backend (Module default is to use `chainpoint`)
+Configure the desired backend via SilverStripe's YML config API e.g in a custom `app/_config/verifiable.yml` file:
 
 ```YML
 ---
@@ -139,8 +141,7 @@ The module comes pre-configured with a backend for the [Chainpoint](https://chai
 
 ### Version 1.x
 
-* For `File` objects, only the contents of the _original file_ and its file name are hashed along with any `verifiable_fields` present. For all resized images
-  present in your system, changes to these will not be flagged as evidence of tampering. Only changes to the original are accounted for.
+* For `File` objects; changes to any resized images present in your system will not be flagged as evidence of tampering. Verifiable will only detect changes made to the original image file.
 * Note that when publishing content, `SiteTree` or otherwise, a slight delay will occur due to the required network requests to the Chainpoint network.
 
 ## Background Reading
