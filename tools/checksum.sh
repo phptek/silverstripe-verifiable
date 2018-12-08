@@ -12,7 +12,7 @@ function do_checksum ()
         --clamp-mtime \
         --exclude-vcs \
         --no-ignore-case \
-        --exclude=CHECKSUM . | sha256sum | sed -e 's#[\s\-]##g'
+        --exclude=CHECKSUM . | sha256sum | sed -e 's#[ -]##g'
 }
 
 if [ ! -z "${1}" ]; then
