@@ -45,5 +45,4 @@ class BackendServiceFactoryTest extends SapphireTest
 
         Config::unnest();
     }
-
 }

@@ -26,5 +26,4 @@ interface GatewayProvider
      * @return string
      */
     public function hashFunc() : string;
-
 }

@@ -25,14 +25,26 @@ class ChainpointProofTest extends SapphireTest
 
         $this->proofs = [
             'good' => [
-                'full' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/json/response-full.json')),
-                'init' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/json/response-initial.json')),
-                'pend' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/json/response-pending.json')),
-                'veri' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/json/response-verified.json')),
-                'v3' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/json/chainpoint-proof.json')),
+                'full' => ChainpointProof::create()->setValue(
+                    file_get_contents(realpath(__DIR__) . '/../fixture/json/response-full.json')
+                ),
+                'init' => ChainpointProof::create()->setValue(
+                    file_get_contents(realpath(__DIR__) . '/../fixture/json/response-initial.json')
+                ),
+                'pend' => ChainpointProof::create()->setValue(
+                    file_get_contents(realpath(__DIR__) . '/../fixture/json/response-pending.json')
+                ),
+                'veri' => ChainpointProof::create()->setValue(
+                    file_get_contents(realpath(__DIR__) . '/../fixture/json/response-verified.json')
+                ),
+                'v3' => ChainpointProof::create()->setValue(
+                    file_get_contents(realpath(__DIR__) . '/../fixture/json/chainpoint-proof.json')
+                ),
             ],
             'bad' => [
-                'full-nohashidnode' => ChainpointProof::create()->setValue(file_get_contents(realpath(__DIR__) . '/../fixture/json/response-full-nohashidnode.json')),
+                'full-nohashidnode' => ChainpointProof::create()->setValue(
+                    file_get_contents(realpath(__DIR__) . '/../fixture/json/response-full-nohashidnode.json')
+                ),
             ]
         ];
     }
@@ -48,9 +60,15 @@ class ChainpointProofTest extends SapphireTest
     public function testGetHash()
     {
         $this->assertEquals('', $this->proofs['good']['full']->getHash());
-        $this->assertEquals('af0c70d03b6427d744e46b820a09db704709852bd4614735efc1394160158ba2', $this->proofs['good']['init']->getHash());
+        $this->assertEquals(
+            'af0c70d03b6427d744e46b820a09db704709852bd4614735efc1394160158ba2',
+            $this->proofs['good']['init']->getHash()
+        );
         $this->assertEquals('', $this->proofs['good']['pend']->getHash());
-        $this->assertEquals('e305bc4fbc91da2b6e140da27cfdf6b880fcd5fa71e84eeb96c16ae4b7110cd1', $this->proofs['good']['veri']->getHash());
+        $this->assertEquals(
+            'e305bc4fbc91da2b6e140da27cfdf6b880fcd5fa71e84eeb96c16ae4b7110cd1',
+            $this->proofs['good']['veri']->getHash()
+        );
     }
 
     public function testGetHashIdNodeGood()
@@ -82,7 +100,10 @@ class ChainpointProofTest extends SapphireTest
     {
         $this->assertContains('eJyVVkFvpEcRhX/Aj+C4XldXd1d3+7', $this->proofs['good']['full']->getProof());
         $this->assertEquals('', $this->proofs['good']['init']->getProof());
-        $this->assertContains('eJyNU82OHDUQ5hHyEBwzO1W2y3b1aSVegVMuo7JdZlpaZkb', $this->proofs['good']['pend']->getProof());
+        $this->assertContains(
+            'eJyNU82OHDUQ5hHyEBwzO1W2y3b1aSVegVMuo7JdZlpaZkb',
+            $this->proofs['good']['pend']->getProof()
+        );
         $this->assertEquals('', $this->proofs['good']['veri']->getProof());
     }
 
@@ -128,5 +149,4 @@ class ChainpointProofTest extends SapphireTest
         $this->assertTrue($this->proofs['good']['pend']->isPending());
         $this->assertFalse($this->proofs['good']['veri']->isPending());
     }
-
 }

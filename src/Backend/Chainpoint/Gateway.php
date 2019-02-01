@@ -165,7 +165,7 @@ class Gateway implements GatewayProvider
 
         $limit = (int) $this->config()->get('discover_node_count') ?: 1;
         $chainpointUrls = $this->config()->get('chainpoint_urls');
-        $url = $chainpointUrls[rand(0,2)];
+        $url = $chainpointUrls[rand(0, 2)];
         $response = $this->client($url, 'GET', [], false);
 
         if ($response->getStatusCode() !== 200) {
@@ -198,5 +198,4 @@ class Gateway implements GatewayProvider
     {
         return static::$discovered_nodes;
     }
-
 }
