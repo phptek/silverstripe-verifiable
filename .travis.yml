@@ -4,7 +4,6 @@ language: php
 
 env:
   global:
-    - COMPOSER_ROOT_VERSION=4.0.x-dev
     - SS_ENVIRONMENT_TYPE="dev"
 
 matrix:
@@ -12,7 +11,7 @@ matrix:
   include:
     - php: 7.0
       env:
-        - DB=MYSQL
+        - DB=MYSQL PHPCS_TEST=1
     - php: 7.1
       env:
         - DB=MYSQL
@@ -26,7 +25,7 @@ before_script:
   - composer self-update || true
   - phpenv rehash
   - phpenv config-rm xdebug.ini
-  
+
   # Composer Deps
   - export PATH=~/.composer/vendor/bin:$PATH
   - composer validate
@@ -34,7 +33,8 @@ before_script:
 
 script:
   - vendor/bin/phpunit test/unit
+  - if [[ $PHPCS_TEST ]]; then vendor/bin/phpcs src test; fi
 
 branches:
-  only: 
+  only:
     - master
