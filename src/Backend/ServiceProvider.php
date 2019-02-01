@@ -16,5 +16,4 @@ interface ServiceProvider
      * @return string
      */
     public function name() : string;
-    
 }

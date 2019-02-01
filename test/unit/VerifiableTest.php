@@ -103,5 +103,4 @@ class VerifiableTest extends SapphireTest
         $this->assertInternalType('array', $test4->verifiableFields());
         $this->assertEquals(['TEST1','TEST2'], $test4->verifiableFields());
     }
-
 }

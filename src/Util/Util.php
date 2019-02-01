@@ -28,5 +28,4 @@ class Util
         // Test for CLI SAPI first, so we don't waste time during legit TTW writes
         return Director::is_cli() && stristr($trace, 'PHPUnit') !== false;
     }
-
 }

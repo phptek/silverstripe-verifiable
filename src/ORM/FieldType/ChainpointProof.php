@@ -178,7 +178,7 @@ class ChainpointProof extends JSONText
 
         if ($type === 'cal') {
             $query = '$..branches..ops..anchors';
-        } else if ($type === 'btc') {
+        } elseif ($type === 'btc') {
             $query = '$..branches..branches..ops..anchors';
         } else {
             $query = '$..anchors';
@@ -210,7 +210,7 @@ class ChainpointProof extends JSONText
             // TODO Smell
             if (Util::is_running_test()) {
                 return '';
-            } else if (ini_get('allow_url_fopen') !== "1" || !$root = file_get_contents($anchor[0]['uris'][0])) {
+            } elseif (ini_get('allow_url_fopen') !== "1" || !$root = file_get_contents($anchor[0]['uris'][0])) {
                 throw new VerifiableBackendException('Unable to read remote file.');
             }
 
@@ -360,5 +360,4 @@ class ChainpointProof extends JSONText
 
         return $anchors[0]['anchor_id'];
     }
-
 }

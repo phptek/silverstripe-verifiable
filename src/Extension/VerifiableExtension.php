@@ -115,7 +115,8 @@ class VerifiableExtension extends DataExtension
 
         // Save the verifiable_fields to the xxx_Versioned table _before_ calling
         // source() which itself, makes use of this data
-        DB::query(sprintf(''
+        DB::query(sprintf(
+            ''
             . ' UPDATE "%s"'
             . ' SET "VerifiableFields" = \'%s\''
             . ' WHERE "RecordID" = %d AND "Version" = %d',
@@ -135,7 +136,8 @@ class VerifiableExtension extends DataExtension
                 $proofData = json_encode($proofData);
             }
 
-            DB::query(sprintf(''
+            DB::query(sprintf(
+                ''
                 . ' UPDATE "%s"'
                 . ' SET "Proof" = \'%s\','
                 . '     "Extra" = \'%s\''
@@ -283,5 +285,4 @@ class VerifiableExtension extends DataExtension
                 ->addExtraClass('btn action btn-outline-primary ')
         ]));
     }
-
 }

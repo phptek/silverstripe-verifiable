@@ -39,5 +39,4 @@ class BackendServiceFactory implements Factory
 
         return Injector::inst()->create($srvClass);
     }
-
 }

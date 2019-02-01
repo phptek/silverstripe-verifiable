@@ -128,8 +128,14 @@ class UpdateProofController extends Controller
 
                     if ($proof->isInitial()) {
                         $classFlag = true;
-                        $this->log('NOTICE', "\tInitial proof found for ID #{$record->RecordID} and version {$record->Version}");
-                        $this->log('NOTICE', "\tRequesting proof via UUID {$proof->getHashIdNode()[0]}");
+                        $this->log(
+                            'NOTICE',
+                            "\tInitial proof found for ID #{$record->RecordID} and version {$record->Version}"
+                        );
+                        $this->log(
+                            'NOTICE',
+                            "\tRequesting proof via UUID {$proof->getHashIdNode()[0]}"
+                        );
                         $this->process($record, $proof);
                     }
                 }
@@ -171,10 +177,16 @@ class UpdateProofController extends Controller
                 ->setValue($response);
 
         if ($proof && $proof->isFull()) {
-            $this->log('NOTICE', "Full proof fetched. Updating record ID #{$record->RecordID} and version {$record->Version}");
+            $this->log(
+                'NOTICE',
+                "Full proof fetched. Updating record ID #{$record->RecordID} and version {$record->Version}"
+            );
             $this->doUpdate($record, $record->Version, $response);
         } else {
-            $this->log('WARN', "\t\tNo full proof found yet for record ID #{$record->RecordID} and version {$record->Version}");
+            $this->log(
+                'WARN',
+                "\t\tNo full proof found yet for record ID #{$record->RecordID} and version {$record->Version}"
+            );
         }
     }
 
@@ -238,13 +250,13 @@ class UpdateProofController extends Controller
                 break;
         }
 
-        echo sprintf('%s[%s] %s%s%s',
-                $colour,
-                $type,
-                $msg,
-                str_repeat($lb, $newLines),
-                $colours['default']
-            );
+        echo sprintf(
+            '%s[%s] %s%s%s',
+            $colour,
+            $type,
+            $msg,
+            str_repeat($lb, $newLines),
+            $colours['default']
+        );
     }
-
 }

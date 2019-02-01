@@ -126,8 +126,7 @@ class VerifiableAdminController extends Controller
         $version = $request->param('VersionID');
         $verificationData = [];
 
-        if (
-                empty($id) || !is_numeric($id) ||
+        if (empty($id) || !is_numeric($id) ||
                 empty($version) || !is_numeric($version) ||
                 empty($class)
             ) {
@@ -361,5 +360,4 @@ class VerifiableAdminController extends Controller
 
         return $this;
     }
-
 }

@@ -177,5 +177,4 @@ class Service implements ServiceProvider
 
         return hash($func, $text, false);
     }
-
 }
