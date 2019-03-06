@@ -155,9 +155,17 @@ The module comes pre-configured with a backend for the [Chainpoint](https://chai
 
 If you like what you see, support me! I accept Bitcoin:
 
-<div style="display:flex;align-items:center;background:#EFEFEF;padding:15px;border-radius:6px;border:solid 1px #CCC;box-shadow:2px 2px 10px 0px rgba(50, 50, 50, 0.75);">
-<img src="https://bitcoin.org/img/icons/logo_ios.png" alt="Bitcoin" width="64" height="64" />
-<span style="display:inline-block;padding-left:10px;border:0;font-weight:bold"><b>bc1qmg0jjtmu3fmm53mkvw69xz8kerq3l3lnh6529d</b></span>
-</div>
+<table border="0">
+	<tr border="0">
+		<td rowspan="2" border="0">
+			<img src="https://bitcoin.org/img/icons/logo_ios.png" alt="Bitcoin" width="64" height="64" />
+		</td>
+	</tr>
+	<tr border="0">
+		<td border="0">
+			<b>bc1qmg0jjtmu3fmm53mkvw69xz8kerq3l3lnh6529d</b>
+		</td>
+	</tr>
+</table>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
